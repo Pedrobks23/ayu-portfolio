@@ -74,8 +74,16 @@ function AnalyticsCard() {
   );
 }
 
+function formatBytes(bytes) {
+  if (bytes === 0) return '< 1 MB';
+  const mb = bytes / (1024 * 1024);
+  if (mb < 1000) return `${mb.toFixed(1)} MB`;
+  return `${(mb / 1024).toFixed(2)} GB`;
+}
+
 function UsageBar({ obras }) {
   const totalImagens = obras.reduce((acc, o) => acc + (o.imagens?.length || 0), 0);
+  const totalBytes = obras.reduce((acc, o) => acc + (o.imagens || []).reduce((s, i) => s + (i.bytes ?? 0), 0), 0);
   const maxPossivel = obras.length * MAX_IMAGENS_POR_OBRA;
   const pct = maxPossivel > 0 ? Math.round((totalImagens / maxPossivel) * 100) : 0;
 
@@ -117,6 +125,7 @@ function UsageBar({ obras }) {
           { label: 'Imagens cadastradas', value: totalImagens },
           { label: 'Obras com imagens', value: obras.filter(o => o.imagens?.length > 0).length },
           { label: 'Obras sem imagens', value: obras.filter(o => !o.imagens?.length).length },
+          { label: 'Espaço usado', value: formatBytes(totalBytes) },
           { label: 'Limite por obra', value: `${MAX_IMAGENS_POR_OBRA} imgs` },
           { label: 'Armazenamento', value: `${CLOUDINARY_FREE_STORAGE_GB} GB` },
         ].map(({ label, value }) => (

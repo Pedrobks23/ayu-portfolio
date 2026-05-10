@@ -13,7 +13,7 @@ export async function uploadImagem(file) {
   });
   if (!r.ok) throw new Error('Falha no upload');
   const data = await r.json();
-  return { publicId: data.public_id, url: data.secure_url };
+  return { publicId: data.public_id, url: data.secure_url, bytes: data.bytes ?? 0 };
 }
 
 const TAMANHOS = {
