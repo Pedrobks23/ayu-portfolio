@@ -1,19 +1,19 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import FadeImg from '@/components/public/FadeImg';
+import Imagem from '@/components/public/Imagem';
 
 export default function ObraCard({ obra, onHoverChange }) {
   const [hovered, setHovered] = useState(false);
   const navigate = useNavigate();
-  const imgUrl = `https://picsum.photos/seed/${obra.imgSeeds[0]}/600/750`;
+  const capa = obra.imagens?.[0];
 
   function handleEnter() {
     setHovered(true);
-    onHoverChange && onHoverChange(true);
+    onHoverChange?.(true);
   }
   function handleLeave() {
     setHovered(false);
-    onHoverChange && onHoverChange(false);
+    onHoverChange?.(false);
   }
 
   return (
@@ -28,22 +28,44 @@ export default function ObraCard({ obra, onHoverChange }) {
           position: 'relative',
           overflow: 'hidden',
           background: '#0D0D0D',
-          aspectRatio: '4/5',
+          aspectRatio: '1/1',
         }}
       >
-        <FadeImg
-          src={imgUrl}
-          alt={obra.titulo}
-          style={{
-            width: '100%',
-            height: '100%',
-            objectFit: 'cover',
-            display: 'block',
-            transform: hovered ? 'scale(1.03)' : 'scale(1)',
-            transition: 'transform 0.5s ease-out',
-            filter: 'grayscale(10%) contrast(1.08) brightness(0.82)',
-          }}
-        />
+        {capa ? (
+          <Imagem
+            publicId={capa.publicId}
+            alt={obra.titulo}
+            size="card"
+            style={{
+              transform: hovered ? 'scale(1.03)' : 'scale(1)',
+              transition: 'transform 0.5s ease-out',
+              filter: 'grayscale(10%) contrast(1.08) brightness(0.82)',
+            }}
+          />
+        ) : (
+          <div
+            style={{
+              width: '100%',
+              height: '100%',
+              background: '#1A1A1A',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <span
+              style={{
+                fontFamily: 'var(--sans)',
+                fontSize: '0.6rem',
+                letterSpacing: '0.15em',
+                color: 'rgba(255,255,255,0.25)',
+                textTransform: 'uppercase',
+              }}
+            >
+              sem imagem
+            </span>
+          </div>
+        )}
         <div
           style={{
             position: 'absolute',

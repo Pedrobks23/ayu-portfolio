@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useObras } from '@/context/ObrasContext';
+import { useConfiguracoes } from '@/hooks/useConfiguracoes';
 import HeroSection from '@/components/public/HeroSection';
 import ObraCard from '@/components/public/ObraCard';
 import Footer from '@/components/public/Footer';
@@ -8,6 +9,7 @@ import { useNavigate } from 'react-router-dom';
 
 export default function Inicio() {
   const { obras } = useObras();
+  const { config } = useConfiguracoes();
   const navigate = useNavigate();
   const [visible, setVisible] = useState(false);
 
@@ -17,15 +19,16 @@ export default function Inicio() {
   }, []);
 
   const destaques = obras
-    .filter(o => o.destaque)
-    .sort((a, b) => (a.ordem || 0) - (b.ordem || 0))
+    .filter(o => o.destaque && o.visivel !== false)
+    .sort((a, b) => (a.ordem ?? 0) - (b.ordem ?? 0))
     .slice(0, 4);
-
-  const heroSeed = obras.length > 0 ? obras[0].imgSeeds[0] : 431;
 
   return (
     <div style={{ opacity: visible ? 1 : 0, transition: 'opacity 0.28s ease-out' }}>
-      <HeroSection seed={heroSeed} />
+      <HeroSection
+        heroImagem={config?.heroImagem}
+        portfolioVisualUrl={config?.portfolioVisualUrl}
+      />
 
       {/* Obras em destaque */}
       <section style={{ padding: 'clamp(64px,8vw,120px) clamp(24px,5vw,72px)' }}>
@@ -94,43 +97,6 @@ export default function Inicio() {
             Nenhuma obra em destaque no momento.
           </div>
         )}
-      </section>
-
-      {/* Citação */}
-      <section
-        style={{
-          padding: '80px clamp(24px,5vw,72px)',
-          borderTop: '1px solid rgba(26,26,26,0.08)',
-          borderBottom: '1px solid rgba(26,26,26,0.08)',
-          textAlign: 'center',
-        }}
-      >
-        <div
-          style={{
-            fontFamily: 'var(--serif)',
-            fontSize: 'clamp(1.4rem,3vw,2.2rem)',
-            fontStyle: 'italic',
-            fontWeight: 300,
-            maxWidth: '680px',
-            margin: '0 auto',
-            lineHeight: 1.5,
-            color: 'var(--text)',
-          }}
-        >
-          "Esculpir é encontrar a forma que já existe dentro da matéria — e ter coragem de deixá-la sair."
-        </div>
-        <div
-          style={{
-            fontFamily: 'var(--sans)',
-            fontSize: '0.62rem',
-            letterSpacing: '0.2em',
-            textTransform: 'uppercase',
-            color: 'var(--mid)',
-            marginTop: '28px',
-          }}
-        >
-          Ayume Andrade
-        </div>
       </section>
 
       <Footer />

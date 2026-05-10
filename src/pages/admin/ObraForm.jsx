@@ -1,4 +1,4 @@
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useObras } from '@/context/ObrasContext';
 import AdminLayout from '@/components/admin/AdminLayout';
 import FormObra from '@/components/admin/FormObra';
@@ -6,12 +6,33 @@ import FormObra from '@/components/admin/FormObra';
 export default function ObraForm() {
   const { slug } = useParams();
   const { getObra } = useObras();
+  const navigate = useNavigate();
   const obraExistente = slug ? getObra(slug) : null;
   const editando = Boolean(obraExistente);
 
   return (
     <AdminLayout>
       <div style={{ maxWidth: '900px' }}>
+        <button
+          onClick={() => navigate('/painel-ayume/dashboard')}
+          style={{
+            fontFamily: 'var(--sans)',
+            fontSize: '0.6rem',
+            letterSpacing: '0.15em',
+            textTransform: 'uppercase',
+            color: 'var(--mid)',
+            background: 'none',
+            border: 'none',
+            cursor: 'pointer',
+            marginBottom: '32px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px',
+            padding: 0,
+          }}
+        >
+          ← Voltar para obras
+        </button>
         <div
           style={{
             fontFamily: 'var(--sans)',

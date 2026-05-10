@@ -129,13 +129,12 @@ export function IgButton() {
   const [hov, setHov] = useState(false);
   return (
     <a
-      href="#"
+      href="https://www.instagram.com/ayuandrade/"
       target="_blank"
       rel="noopener noreferrer"
-      aria-label="Instagram (mock)"
+      aria-label="Instagram"
       onMouseEnter={() => setHov(true)}
       onMouseLeave={() => setHov(false)}
-      onClick={(e) => e.preventDefault()}
       style={{
         display: 'flex',
         alignItems: 'center',

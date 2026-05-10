@@ -1,29 +1,32 @@
-import { createContext, useContext, useState } from 'react';
-import { storage } from '@/lib/storage';
+import { createContext, useContext, useState, useEffect } from 'react';
+import {
+  onAuthStateChanged,
+  signInWithEmailAndPassword,
+  signOut,
+} from 'firebase/auth';
+import { auth } from '@/lib/firebase';
 
 const AuthContext = createContext(null);
 
-const CREDS = { email: 'ayu@portfolio.local', senha: 'ayu2026' };
-
 export function AuthProvider({ children }) {
-  const [loggedIn, setLoggedIn] = useState(() => storage.getAuth());
+  const [user, setUser] = useState(undefined); // undefined = ainda carregando
 
-  function login(email, senha) {
-    if (email === CREDS.email && senha === CREDS.senha) {
-      storage.setAuth(true);
-      setLoggedIn(true);
-      return true;
-    }
-    return false;
+  useEffect(() => {
+    return onAuthStateChanged(auth, u => setUser(u ?? null));
+  }, []);
+
+  async function login(email, senha) {
+    await signInWithEmailAndPassword(auth, email, senha);
   }
 
-  function logout() {
-    storage.setAuth(false);
-    setLoggedIn(false);
+  async function logout() {
+    await signOut(auth);
   }
 
   return (
-    <AuthContext.Provider value={{ loggedIn, login, logout }}>
+    <AuthContext.Provider
+      value={{ user, loggedIn: Boolean(user), loading: user === undefined, login, logout }}
+    >
       {children}
     </AuthContext.Provider>
   );

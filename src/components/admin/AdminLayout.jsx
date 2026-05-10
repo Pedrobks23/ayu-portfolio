@@ -5,8 +5,8 @@ export default function AdminLayout({ children }) {
   const navigate = useNavigate();
   const { logout } = useAuth();
 
-  function handleLogout() {
-    logout();
+  async function handleLogout() {
+    await logout();
     navigate('/painel-ayume/login');
   }
 
@@ -61,6 +61,21 @@ export default function AdminLayout({ children }) {
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
           <button
+            onClick={() => navigate('/painel-ayume/configuracoes')}
+            style={{
+              fontFamily: 'var(--sans)',
+              fontSize: '0.62rem',
+              letterSpacing: '0.18em',
+              textTransform: 'uppercase',
+              color: 'var(--mid)',
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+            }}
+          >
+            Configurações
+          </button>
+          <button
             onClick={() => navigate('/')}
             style={{
               fontFamily: 'var(--sans)',
@@ -94,24 +109,20 @@ export default function AdminLayout({ children }) {
         </div>
       </header>
 
-      {/* Banner de demonstração */}
+      {/* Banner produção */}
       <div
         role="status"
         style={{
-          background: 'rgba(197,192,186,0.25)',
-          borderBottom: '1px solid rgba(197,192,186,0.6)',
-          padding: '12px clamp(24px,5vw,72px)',
+          background: 'rgba(58,107,58,0.06)',
+          borderBottom: '1px solid rgba(58,107,58,0.2)',
+          padding: '10px clamp(24px,5vw,72px)',
           fontFamily: 'var(--sans)',
-          fontSize: '0.72rem',
-          color: 'var(--mid)',
+          fontSize: '0.7rem',
+          color: '#3a6b3a',
           letterSpacing: '0.02em',
         }}
       >
-        ⚠️{' '}
-        <strong style={{ color: 'var(--text)', fontWeight: 500 }}>
-          Modo de demonstração:
-        </strong>{' '}
-        as alterações ficam salvas apenas neste navegador. Será conectado ao banco de dados na próxima fase.
+        Conectado ao banco de dados de produção. Alterações são imediatamente públicas.
       </div>
 
       {/* Conteúdo */}

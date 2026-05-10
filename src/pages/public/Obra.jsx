@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useObras } from '@/context/ObrasContext';
-import FadeImg from '@/components/public/FadeImg';
+import { useConfiguracoes } from '@/hooks/useConfiguracoes';
+import Imagem from '@/components/public/Imagem';
 import ObraCard from '@/components/public/ObraCard';
 import Footer from '@/components/public/Footer';
 import { BtnBlack } from '@/components/public/ui';
@@ -12,14 +13,141 @@ function dispColor(disponibilidade) {
   return 'var(--mid)';
 }
 
+function ModalContato({ obra, contato, onClose }) {
+  const titulo = encodeURIComponent(obra.titulo);
+  const whatsappUrl = `https://wa.me/${contato.whatsapp}?text=${encodeURIComponent(
+    `Olá! Tenho interesse na obra "${obra.titulo}". Está disponível?`
+  )}`;
+  const emailUrl = `mailto:${contato.email}?subject=${encodeURIComponent(
+    `Interesse na obra "${obra.titulo}"`
+  )}&body=${encodeURIComponent(
+    `Olá Ayume,\n\nTenho interesse na obra "${obra.titulo}" e gostaria de saber mais informações sobre disponibilidade e valores.\n\nObrigado(a).`
+  )}`;
+
+  return (
+    <div
+      onClick={onClose}
+      style={{
+        position: 'fixed',
+        inset: 0,
+        background: 'rgba(0,0,0,0.45)',
+        zIndex: 999,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '24px',
+      }}
+    >
+      <div
+        onClick={e => e.stopPropagation()}
+        style={{
+          background: 'var(--bg)',
+          padding: 'clamp(32px,5vw,56px)',
+          maxWidth: '420px',
+          width: '100%',
+          position: 'relative',
+        }}
+      >
+        <button
+          onClick={onClose}
+          aria-label="Fechar"
+          style={{
+            position: 'absolute',
+            top: '16px',
+            right: '20px',
+            background: 'none',
+            border: 'none',
+            cursor: 'pointer',
+            fontSize: '1.2rem',
+            color: 'var(--mid)',
+            lineHeight: 1,
+          }}
+        >
+          ×
+        </button>
+
+        <div
+          style={{
+            fontFamily: 'var(--sans)',
+            fontSize: '0.58rem',
+            letterSpacing: '0.25em',
+            textTransform: 'uppercase',
+            color: 'var(--mid)',
+            marginBottom: '12px',
+          }}
+        >
+          Consultar disponibilidade
+        </div>
+        <div
+          style={{
+            fontFamily: 'var(--serif)',
+            fontSize: '1.3rem',
+            fontStyle: 'italic',
+            fontWeight: 300,
+            marginBottom: '32px',
+            lineHeight: 1.3,
+          }}
+        >
+          {obra.titulo}
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          <a
+            href={whatsappUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '10px',
+              background: 'var(--text)',
+              color: 'var(--bg)',
+              padding: '16px 24px',
+              fontFamily: 'var(--sans)',
+              fontSize: '0.62rem',
+              letterSpacing: '0.2em',
+              textTransform: 'uppercase',
+              textDecoration: 'none',
+            }}
+          >
+            WhatsApp
+          </a>
+          <a
+            href={emailUrl}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '10px',
+              border: '1px solid rgba(26,26,26,0.3)',
+              color: 'var(--text)',
+              padding: '16px 24px',
+              fontFamily: 'var(--sans)',
+              fontSize: '0.62rem',
+              letterSpacing: '0.2em',
+              textTransform: 'uppercase',
+              textDecoration: 'none',
+            }}
+          >
+            E-mail
+          </a>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function Obra() {
   const { slug } = useParams();
-  const { obras, getObra } = useObras();
+  const { obras, loading, getObra } = useObras();
+  const { config } = useConfiguracoes();
   const navigate = useNavigate();
   const [activeImg, setActiveImg] = useState(0);
   const [visible, setVisible] = useState(false);
+  const [modalAberto, setModalAberto] = useState(false);
 
-  const obra = getObra(slug) || obras[0];
+  const obra = getObra(slug) ?? (!loading ? obras[0] : null);
 
   useEffect(() => {
     setActiveImg(0);
@@ -31,9 +159,12 @@ export default function Obra() {
     return () => clearTimeout(t);
   }, []);
 
+  if (loading) return null;
   if (!obra) return null;
 
+  const imagens = obra.imagens || [];
   const outras = obras.filter(o => o.slug !== slug).slice(0, 3);
+  const contato = config?.contato || {};
 
   return (
     <div
@@ -43,6 +174,10 @@ export default function Obra() {
         transition: 'opacity 0.28s ease-out',
       }}
     >
+      {modalAberto && (
+        <ModalContato obra={obra} contato={contato} onClose={() => setModalAberto(false)} />
+      )}
+
       {/* Breadcrumb */}
       <div style={{ padding: '24px clamp(24px,5vw,72px) 0' }}>
         <button
@@ -75,62 +210,77 @@ export default function Obra() {
           alignItems: 'start',
         }}
       >
-        {/* Imagem */}
+        {/* Galeria */}
         <div>
           <div
             style={{
               background: '#0D0D0D',
-              aspectRatio: '4/5',
+              aspectRatio: '1/1',
               overflow: 'hidden',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
             }}
           >
-            <FadeImg
-              key={activeImg}
-              src={`https://picsum.photos/seed/${obra.imgSeeds[activeImg]}/800/1000`}
-              alt={obra.titulo}
-              style={{
-                width: '100%',
-                height: '100%',
-                objectFit: 'cover',
-                display: 'block',
-                filter: 'grayscale(8%) contrast(1.05) brightness(0.85)',
-              }}
-            />
-          </div>
-          {/* Thumbnails */}
-          <div style={{ display: 'flex', gap: '12px', marginTop: '16px' }}>
-            {obra.imgSeeds.map((seed, i) => (
-              <button
-                key={i}
-                onClick={() => setActiveImg(i)}
-                aria-label={`Ver imagem ${i + 1}`}
+            {imagens[activeImg] ? (
+              <img
+                key={activeImg}
+                src={imagens[activeImg].url}
+                alt={obra.titulo}
+                loading={activeImg === 0 ? 'eager' : 'lazy'}
                 style={{
-                  flex: 1,
-                  aspectRatio: '1/1',
-                  overflow: 'hidden',
-                  background: '#0D0D0D',
-                  border: i === activeImg
-                    ? '2px solid var(--text)'
-                    : '2px solid transparent',
-                  cursor: 'pointer',
-                  padding: 0,
-                  transition: 'border-color 0.2s',
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'contain',
+                  display: 'block',
+                }}
+              />
+            ) : (
+              <span
+                style={{
+                  fontFamily: 'var(--sans)',
+                  fontSize: '0.6rem',
+                  letterSpacing: '0.15em',
+                  color: 'rgba(255,255,255,0.2)',
+                  textTransform: 'uppercase',
                 }}
               >
-                <img
-                  src={`https://picsum.photos/seed/${seed}/200/200`}
-                  alt=""
-                  style={{
-                    width: '100%',
-                    height: '100%',
-                    objectFit: 'cover',
-                    display: 'block',
-                    filter: 'grayscale(15%) brightness(0.8)',
-                  }}
-                />
-              </button>
-            ))}
+                sem imagem
+              </span>
+            )}
           </div>
+
+          {/* Thumbnails */}
+          {imagens.length > 1 && (
+            <div style={{ display: 'flex', gap: '12px', marginTop: '16px' }}>
+              {imagens.map((img, i) => (
+                <button
+                  key={img.publicId}
+                  onClick={() => setActiveImg(i)}
+                  aria-label={`Ver imagem ${i + 1}`}
+                  style={{
+                    flex: 1,
+                    aspectRatio: '1/1',
+                    overflow: 'hidden',
+                    background: '#0D0D0D',
+                    border: i === activeImg
+                      ? '2px solid var(--text)'
+                      : '2px solid transparent',
+                    cursor: 'pointer',
+                    padding: 0,
+                    transition: 'border-color 0.2s',
+                  }}
+                >
+                  <Imagem
+                    publicId={img.publicId}
+                    alt=""
+                    size="thumb"
+                    style={{ filter: 'grayscale(15%) brightness(0.8)' }}
+                  />
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Informações */}
@@ -160,7 +310,6 @@ export default function Obra() {
             {obra.titulo}
           </h1>
 
-          {/* Tabela de metadados */}
           <table
             style={{
               width: '100%',
@@ -179,43 +328,41 @@ export default function Obra() {
                   value: obra.disponibilidade,
                   color: dispColor(obra.disponibilidade),
                 },
-              ].filter(row => row.value).map(({ label, value, serif, color }) => (
-                <tr
-                  key={label}
-                  style={{ borderBottom: '1px solid rgba(26,26,26,0.1)' }}
-                >
-                  <td
-                    style={{
-                      padding: '16px 0',
-                      fontFamily: 'var(--sans)',
-                      fontSize: '0.6rem',
-                      letterSpacing: '0.2em',
-                      textTransform: 'uppercase',
-                      color: 'var(--mid)',
-                      width: '42%',
-                      verticalAlign: 'top',
-                    }}
-                  >
-                    {label}
-                  </td>
-                  <td
-                    style={{
-                      padding: '16px 0',
-                      fontFamily: serif ? 'var(--serif)' : 'var(--sans)',
-                      fontSize: serif ? '1rem' : '0.85rem',
-                      textAlign: 'right',
-                      color: color || 'var(--text)',
-                      fontStyle: serif ? 'italic' : 'normal',
-                    }}
-                  >
-                    {value}
-                  </td>
-                </tr>
-              ))}
+              ]
+                .filter(row => row.value)
+                .map(({ label, value, serif, color }) => (
+                  <tr key={label} style={{ borderBottom: '1px solid rgba(26,26,26,0.1)' }}>
+                    <td
+                      style={{
+                        padding: '16px 0',
+                        fontFamily: 'var(--sans)',
+                        fontSize: '0.6rem',
+                        letterSpacing: '0.2em',
+                        textTransform: 'uppercase',
+                        color: 'var(--mid)',
+                        width: '42%',
+                        verticalAlign: 'top',
+                      }}
+                    >
+                      {label}
+                    </td>
+                    <td
+                      style={{
+                        padding: '16px 0',
+                        fontFamily: serif ? 'var(--serif)' : 'var(--sans)',
+                        fontSize: serif ? '1rem' : '0.85rem',
+                        textAlign: 'right',
+                        color: color || 'var(--text)',
+                        fontStyle: serif ? 'italic' : 'normal',
+                      }}
+                    >
+                      {value}
+                    </td>
+                  </tr>
+                ))}
             </tbody>
           </table>
 
-          {/* Descrição opcional */}
           {obra.descricao && (
             <div
               style={{
@@ -232,7 +379,7 @@ export default function Obra() {
 
           <BtnBlack
             label="Consultar disponibilidade →"
-            onClick={() => navigate(`/contato?obra=${obra.slug}`)}
+            onClick={() => setModalAberto(true)}
           />
         </div>
       </div>

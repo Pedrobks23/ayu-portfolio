@@ -6,7 +6,8 @@ import Footer from '@/components/public/Footer';
 
 export default function Catalogo() {
   const { obras } = useObras();
-  const [filtro, setFiltro] = useState('TODAS');
+  const [categoria, setCategoria] = useState('Todas');
+  const [colecao, setColecao] = useState('Todas');
   const [anyHovered, setAnyHovered] = useState(false);
   const [visible, setVisible] = useState(false);
 
@@ -17,12 +18,12 @@ export default function Catalogo() {
 
   const filtered = obras
     .filter(o => {
-      if (filtro === 'TODAS') return true;
-      if (filtro === 'PINTURA') return o.tipo === 'Pintura';
-      if (filtro === 'ESCULTURA') return o.tipo === 'Escultura';
-      return o.colecao === filtro;
+      if (o.visivel === false) return false;
+      if (categoria !== 'Todas' && o.tipo !== categoria) return false;
+      if (colecao !== 'Todas' && o.colecao !== colecao) return false;
+      return true;
     })
-    .sort((a, b) => (a.ordem || 0) - (b.ordem || 0));
+    .sort((a, b) => (a.ordem ?? 0) - (b.ordem ?? 0));
 
   return (
     <div
@@ -60,18 +61,22 @@ export default function Catalogo() {
         >
           Catálogo
         </div>
-        <FiltroCatalogo obras={obras} filtroAtivo={filtro} onChange={setFiltro} />
+        <FiltroCatalogo
+          obras={obras}
+          categoria={categoria}
+          colecao={colecao}
+          onCategoriaChange={setCategoria}
+          onColecaoChange={setColecao}
+        />
       </section>
 
-      <section
-        style={{ padding: '8px clamp(24px,5vw,72px) clamp(64px,8vw,120px)' }}
-      >
+      <section style={{ padding: '8px clamp(24px,5vw,72px) clamp(64px,8vw,120px)' }}>
         {filtered.length > 0 ? (
           <div
             style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))',
-              gap: '40px 32px',
+              gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
+              gap: '32px 24px',
             }}
           >
             {filtered.map(o => (

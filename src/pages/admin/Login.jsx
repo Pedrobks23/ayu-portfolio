@@ -4,23 +4,27 @@ import { useAuth } from '@/context/AuthContext';
 
 export default function Login() {
   const navigate = useNavigate();
-  const { loggedIn, login } = useAuth();
+  const { loggedIn, loading, login } = useAuth();
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
   const [erro, setErro] = useState('');
+  const [carregando, setCarregando] = useState(false);
 
   useEffect(() => {
-    if (loggedIn) navigate('/painel-ayume/dashboard', { replace: true });
-  }, [loggedIn, navigate]);
+    if (!loading && loggedIn) navigate('/painel-ayume/dashboard', { replace: true });
+  }, [loggedIn, loading, navigate]);
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault();
     setErro('');
-    const ok = login(email, senha);
-    if (ok) {
+    setCarregando(true);
+    try {
+      await login(email, senha);
       navigate('/painel-ayume/dashboard', { replace: true });
-    } else {
+    } catch {
       setErro('E-mail ou senha incorretos.');
+    } finally {
+      setCarregando(false);
     }
   }
 
@@ -35,7 +39,6 @@ export default function Login() {
     color: 'var(--text)',
     outline: 'none',
   };
-
   const labelStyle = {
     fontFamily: 'var(--sans)',
     fontSize: '0.6rem',
@@ -58,7 +61,6 @@ export default function Login() {
       }}
     >
       <div style={{ width: '100%', maxWidth: '400px' }}>
-        {/* Logo */}
         <div
           style={{
             fontFamily: 'var(--serif)',
@@ -86,45 +88,24 @@ export default function Login() {
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
           <div>
             <label style={labelStyle} htmlFor="email">E-mail</label>
-            <input
-              id="email"
-              type="email"
-              required
-              autoComplete="email"
-              value={email}
-              onChange={e => setEmail(e.target.value)}
-              style={inputStyle}
-            />
+            <input id="email" type="email" required autoComplete="email"
+              value={email} onChange={e => setEmail(e.target.value)} style={inputStyle} />
           </div>
           <div>
             <label style={labelStyle} htmlFor="senha">Senha</label>
-            <input
-              id="senha"
-              type="password"
-              required
-              autoComplete="current-password"
-              value={senha}
-              onChange={e => setSenha(e.target.value)}
-              style={inputStyle}
-            />
+            <input id="senha" type="password" required autoComplete="current-password"
+              value={senha} onChange={e => setSenha(e.target.value)} style={inputStyle} />
           </div>
 
           {erro && (
-            <div
-              role="alert"
-              style={{
-                fontFamily: 'var(--sans)',
-                fontSize: '0.72rem',
-                color: '#8a3030',
-                letterSpacing: '0.03em',
-              }}
-            >
+            <div role="alert" style={{ fontFamily: 'var(--sans)', fontSize: '0.72rem', color: '#8a3030' }}>
               {erro}
             </div>
           )}
 
           <button
             type="submit"
+            disabled={carregando}
             style={{
               marginTop: '8px',
               background: 'var(--text)',
@@ -135,11 +116,12 @@ export default function Login() {
               textTransform: 'uppercase',
               border: 'none',
               padding: '18px 40px',
-              cursor: 'pointer',
+              cursor: carregando ? 'not-allowed' : 'pointer',
+              opacity: carregando ? 0.6 : 1,
               width: '100%',
             }}
           >
-            Entrar
+            {carregando ? 'Entrando...' : 'Entrar'}
           </button>
         </form>
       </div>

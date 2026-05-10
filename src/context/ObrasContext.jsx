@@ -1,34 +1,55 @@
 import { createContext, useContext, useState, useEffect } from 'react';
-import { storage } from '@/lib/storage';
-import obrasIniciais from '@/data/obrasIniciais';
+import {
+  collection,
+  doc,
+  onSnapshot,
+  setDoc,
+  deleteDoc,
+  serverTimestamp,
+} from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 
 const ObrasContext = createContext(null);
 
 export function ObrasProvider({ children }) {
-  const [obras, setObras] = useState(() => storage.getObras() || obrasIniciais);
+  const [obras, setObras] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    storage.setObras(obras);
-  }, [obras]);
+    const unsub = onSnapshot(collection(db, 'obras'), snap => {
+      const data = snap.docs.map(d => ({ ...d.data(), slug: d.id }));
+      setObras(data.sort((a, b) => (a.ordem ?? 0) - (b.ordem ?? 0)));
+      setLoading(false);
+    });
+    return unsub;
+  }, []);
 
   function getObra(slug) {
-    return obras.find(o => o.slug === slug) || null;
+    return obras.find(o => o.slug === slug) ?? null;
   }
 
-  function criarObra(obra) {
-    setObras(prev => [...prev, obra]);
+  async function criarObra(slug, dados) {
+    await setDoc(doc(db, 'obras', slug), {
+      ...dados,
+      criadoEm:    serverTimestamp(),
+      atualizadoEm: serverTimestamp(),
+    });
   }
 
-  function atualizarObra(slug, dados) {
-    setObras(prev => prev.map(o => o.slug === slug ? { ...o, ...dados } : o));
+  async function atualizarObra(slug, dados) {
+    await setDoc(
+      doc(db, 'obras', slug),
+      { ...dados, atualizadoEm: serverTimestamp() },
+      { merge: true }
+    );
   }
 
-  function deletarObra(slug) {
-    setObras(prev => prev.filter(o => o.slug !== slug));
+  async function deletarObra(slug) {
+    await deleteDoc(doc(db, 'obras', slug));
   }
 
   return (
-    <ObrasContext.Provider value={{ obras, getObra, criarObra, atualizarObra, deletarObra }}>
+    <ObrasContext.Provider value={{ obras, loading, getObra, criarObra, atualizarObra, deletarObra }}>
       {children}
     </ObrasContext.Provider>
   );

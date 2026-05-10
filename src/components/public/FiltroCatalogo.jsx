@@ -1,23 +1,74 @@
-import { Pill } from '@/components/public/ui';
+const CATEGORIAS = ['Todas', 'Pintura', 'Escultura'];
 
-export default function FiltroCatalogo({ obras, filtroAtivo, onChange }) {
-  const colecoes = [...new Set(obras.map(o => o.colecao))];
-  const pills = ['TODAS', 'PINTURA', 'ESCULTURA', ...colecoes];
+const pillBase = {
+  fontFamily: 'var(--sans)',
+  letterSpacing: '0.15em',
+  textTransform: 'uppercase',
+  background: 'none',
+  border: '1px solid transparent',
+  cursor: 'pointer',
+  transition: 'all 0.2s ease-out',
+};
+
+function Pill({ label, active, onClick, small }) {
+  return (
+    <button
+      onClick={onClick}
+      style={{
+        ...pillBase,
+        fontSize: small ? '0.55rem' : '0.62rem',
+        padding: small ? '6px 14px' : '8px 20px',
+        borderColor: active ? 'var(--text)' : 'rgba(26,26,26,0.2)',
+        color: active ? 'var(--text)' : 'var(--mid)',
+        background: active ? 'var(--text)' : 'none',
+        ...(active && { color: 'var(--bg)' }),
+      }}
+    >
+      {label}
+    </button>
+  );
+}
+
+export default function FiltroCatalogo({ obras, categoria, colecao, onCategoriaChange, onColecaoChange }) {
+  const colecoesDeCategoria =
+    categoria !== 'Todas'
+      ? [...new Set(obras.filter(o => o.tipo === categoria).map(o => o.colecao).filter(Boolean))]
+      : [];
 
   return (
-    <div
-      style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}
-      role="group"
-      aria-label="Filtros do catálogo"
-    >
-      {pills.map(p => (
-        <Pill
-          key={p}
-          label={p}
-          active={filtroAtivo === p}
-          onClick={() => onChange(p)}
-        />
-      ))}
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+      {/* Nível 1 — Categoria */}
+      <div
+        style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}
+        role="group"
+        aria-label="Filtrar por categoria"
+      >
+        {CATEGORIAS.map(c => (
+          <Pill
+            key={c}
+            label={c}
+            active={categoria === c}
+            onClick={() => {
+              onCategoriaChange(c);
+              onColecaoChange('Todas');
+            }}
+          />
+        ))}
+      </div>
+
+      {/* Nível 2 — Coleção (só aparece se categoria específica selecionada) */}
+      {colecoesDeCategoria.length > 0 && (
+        <div
+          style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', paddingLeft: '2px' }}
+          role="group"
+          aria-label="Filtrar por coleção"
+        >
+          <Pill label="Todas as coleções" active={colecao === 'Todas'} onClick={() => onColecaoChange('Todas')} small />
+          {colecoesDeCategoria.map(c => (
+            <Pill key={c} label={c} active={colecao === c} onClick={() => onColecaoChange(c)} small />
+          ))}
+        </div>
+      )}
     </div>
   );
 }

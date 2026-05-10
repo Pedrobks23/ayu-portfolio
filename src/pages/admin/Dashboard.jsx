@@ -2,31 +2,164 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useObras } from '@/context/ObrasContext';
 import AdminLayout from '@/components/admin/AdminLayout';
+import { urlOtimizada } from '@/lib/cloudinary';
+import { doc, updateDoc } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+
+const CLOUDINARY_LINK = `https://console.cloudinary.com/pm/c-dlaew1b7j/media-explorer`;
+const MAX_IMAGENS_POR_OBRA = 5;
+const CLOUDINARY_FREE_STORAGE_GB = 25;
+
+function UsageBar({ obras }) {
+  const totalImagens = obras.reduce((acc, o) => acc + (o.imagens?.length || 0), 0);
+  const maxPossivel = obras.length * MAX_IMAGENS_POR_OBRA;
+  const pct = maxPossivel > 0 ? Math.round((totalImagens / maxPossivel) * 100) : 0;
+
+  return (
+    <div
+      style={{
+        marginBottom: '32px',
+        padding: '20px 24px',
+        background: 'rgba(197,192,186,0.12)',
+        border: '1px solid rgba(197,192,186,0.4)',
+      }}
+    >
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: '14px',
+          flexWrap: 'wrap',
+          gap: '8px',
+        }}
+      >
+        <div
+          style={{
+            fontFamily: 'var(--sans)',
+            fontSize: '0.58rem',
+            letterSpacing: '0.2em',
+            textTransform: 'uppercase',
+            color: 'var(--mid)',
+          }}
+        >
+          Uso de imagens
+        </div>
+        <span />
+      </div>
+
+      <div style={{ display: 'flex', gap: '32px', flexWrap: 'wrap', marginBottom: '16px' }}>
+        {[
+          { label: 'Imagens cadastradas', value: totalImagens },
+          { label: 'Obras com imagens', value: obras.filter(o => o.imagens?.length > 0).length },
+          { label: 'Obras sem imagens', value: obras.filter(o => !o.imagens?.length).length },
+          { label: 'Limite por obra', value: `${MAX_IMAGENS_POR_OBRA} imgs` },
+          { label: 'Armazenamento', value: `${CLOUDINARY_FREE_STORAGE_GB} GB` },
+        ].map(({ label, value }) => (
+          <div key={label}>
+            <div
+              style={{
+                fontFamily: 'var(--serif)',
+                fontSize: '1.4rem',
+                fontWeight: 300,
+                color: 'var(--text)',
+                lineHeight: 1,
+              }}
+            >
+              {value}
+            </div>
+            <div
+              style={{
+                fontFamily: 'var(--sans)',
+                fontSize: '0.58rem',
+                letterSpacing: '0.1em',
+                color: 'var(--mid)',
+                marginTop: '4px',
+              }}
+            >
+              {label}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Barra de progresso imagens */}
+      <div>
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            fontFamily: 'var(--sans)',
+            fontSize: '0.58rem',
+            color: 'var(--mid)',
+            letterSpacing: '0.08em',
+            marginBottom: '6px',
+          }}
+        >
+          <span>{totalImagens} de {maxPossivel} slots possíveis preenchidos</span>
+          <span>{pct}%</span>
+        </div>
+        <div
+          style={{
+            height: '3px',
+            background: 'rgba(197,192,186,0.5)',
+            width: '100%',
+          }}
+        >
+          <div
+            style={{
+              height: '100%',
+              width: `${pct}%`,
+              background: 'var(--text)',
+              transition: 'width 0.5s ease-out',
+            }}
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
 
 const BADGE = {
-  Disponível: { bg: 'rgba(58,107,58,0.1)', color: '#3a6b3a' },
+  Disponível:    { bg: 'rgba(58,107,58,0.1)',    color: '#3a6b3a' },
   'Sob consulta': { bg: 'rgba(107,101,96,0.12)', color: 'var(--mid)' },
-  Indisponível: { bg: 'rgba(138,48,48,0.1)', color: '#8a3030' },
+  Indisponível:  { bg: 'rgba(138,48,48,0.1)',    color: '#8a3030' },
 };
 
 export default function Dashboard() {
   const navigate = useNavigate();
-  const { obras, deletarObra } = useObras();
+  const { obras, loading, deletarObra } = useObras();
   const [busca, setBusca] = useState('');
   const [tipoFiltro, setTipoFiltro] = useState('TODAS');
+  const [deletando, setDeletando] = useState(null);
+  const [toggling, setToggling] = useState(null);
+
+  async function handleToggleVisivel(slug, atual) {
+    setToggling(slug);
+    try {
+      await updateDoc(doc(db, 'obras', slug), { visivel: !atual });
+    } finally {
+      setToggling(null);
+    }
+  }
 
   const filtradas = obras
     .filter(o => {
-      const matchBusca = !busca || o.titulo.toLowerCase().includes(busca.toLowerCase()) ||
-        o.colecao.toLowerCase().includes(busca.toLowerCase());
+      const matchBusca = !busca ||
+        o.titulo?.toLowerCase().includes(busca.toLowerCase()) ||
+        o.colecao?.toLowerCase().includes(busca.toLowerCase());
       const matchTipo = tipoFiltro === 'TODAS' || o.tipo === tipoFiltro;
       return matchBusca && matchTipo;
     })
-    .sort((a, b) => (a.ordem || 0) - (b.ordem || 0));
+    .sort((a, b) => (a.ordem ?? 0) - (b.ordem ?? 0));
 
-  function handleDeletar(slug, titulo) {
-    if (window.confirm(`Deletar a obra "${titulo}"? Esta ação não pode ser desfeita.`)) {
-      deletarObra(slug);
+  async function handleDeletar(slug, titulo) {
+    if (!window.confirm(`Deletar a obra "${titulo}"? Esta ação não pode ser desfeita.`)) return;
+    setDeletando(slug);
+    try {
+      await deletarObra(slug);
+    } finally {
+      setDeletando(null);
     }
   }
 
@@ -42,7 +175,6 @@ export default function Dashboard() {
 
   return (
     <AdminLayout>
-      {/* Cabeçalho da página */}
       <div
         style={{
           display: 'flex',
@@ -95,6 +227,9 @@ export default function Dashboard() {
         </button>
       </div>
 
+      {/* Monitor de uso */}
+      <UsageBar obras={obras} />
+
       {/* Filtros */}
       <div
         style={{
@@ -126,7 +261,11 @@ export default function Dashboard() {
       </div>
 
       {/* Tabela */}
-      {filtradas.length === 0 ? (
+      {loading ? (
+        <div style={{ textAlign: 'center', padding: '60px 0', fontFamily: 'var(--sans)', fontSize: '0.75rem', color: 'var(--mid)', letterSpacing: '0.1em' }}>
+          Carregando...
+        </div>
+      ) : filtradas.length === 0 ? (
         <div
           style={{
             textAlign: 'center',
@@ -142,18 +281,11 @@ export default function Dashboard() {
       ) : (
         <div style={{ overflowX: 'auto' }}>
           <table
-            style={{
-              width: '100%',
-              borderCollapse: 'collapse',
-              fontFamily: 'var(--sans)',
-            }}
+            style={{ width: '100%', borderCollapse: 'collapse', fontFamily: 'var(--sans)' }}
           >
             <thead>
               <tr
-                style={{
-                  borderBottom: '1px solid rgba(26,26,26,0.15)',
-                  textAlign: 'left',
-                }}
+                style={{ borderBottom: '1px solid rgba(26,26,26,0.15)', textAlign: 'left' }}
               >
                 {['', 'Obra', 'Coleção', 'Tipo', 'Ano', 'Disponibilidade', 'Ações'].map(h => (
                   <th
@@ -176,11 +308,9 @@ export default function Dashboard() {
             <tbody>
               {filtradas.map(obra => {
                 const badge = BADGE[obra.disponibilidade] || BADGE['Sob consulta'];
+                const capa = obra.imagens?.[0];
                 return (
-                  <tr
-                    key={obra.slug}
-                    style={{ borderBottom: '1px solid rgba(26,26,26,0.08)' }}
-                  >
+                  <tr key={obra.slug} style={{ borderBottom: '1px solid rgba(26,26,26,0.08)' }}>
                     {/* Thumbnail */}
                     <td style={{ padding: '16px 16px 16px 0', width: '60px' }}>
                       <div
@@ -192,83 +322,61 @@ export default function Dashboard() {
                           flexShrink: 0,
                         }}
                       >
-                        <img
-                          src={`https://picsum.photos/seed/${obra.imgSeeds[0]}/104/104`}
-                          alt=""
-                          style={{
-                            width: '100%',
-                            height: '100%',
-                            objectFit: 'cover',
-                            display: 'block',
-                            filter: 'grayscale(20%) brightness(0.85)',
-                          }}
-                        />
+                        {capa ? (
+                          <img
+                            src={urlOtimizada(capa.publicId, 'thumb')}
+                            alt=""
+                            loading="lazy"
+                            style={{
+                              width: '100%',
+                              height: '100%',
+                              objectFit: 'cover',
+                              display: 'block',
+                              filter: 'grayscale(20%) brightness(0.85)',
+                            }}
+                          />
+                        ) : (
+                          <div style={{ width: '100%', height: '100%', background: '#1A1A1A' }} />
+                        )}
                       </div>
                     </td>
 
-                    {/* Título */}
                     <td style={{ padding: '16px 16px 16px 0', maxWidth: '220px' }}>
                       <div
                         style={{
                           fontFamily: 'var(--serif)',
                           fontSize: '0.95rem',
                           fontStyle: 'italic',
-                          color: 'var(--text)',
-                          marginBottom: '2px',
+                          color: obra.visivel === false ? 'var(--mid)' : 'var(--text)',
+                          marginBottom: '4px',
                         }}
                       >
                         {obra.titulo}
                       </div>
-                      {obra.destaque && (
-                        <div
-                          style={{
-                            fontSize: '0.58rem',
-                            letterSpacing: '0.15em',
-                            textTransform: 'uppercase',
-                            color: 'var(--mid)',
-                          }}
-                        >
-                          ★ destaque
-                        </div>
-                      )}
+                      <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                        {obra.visivel === false && (
+                          <span style={{ fontSize: '0.55rem', letterSpacing: '0.15em', textTransform: 'uppercase', color: '#8a3030' }}>
+                            ● oculta
+                          </span>
+                        )}
+                        {obra.destaque && obra.visivel !== false && (
+                          <span style={{ fontSize: '0.55rem', letterSpacing: '0.15em', textTransform: 'uppercase', color: 'var(--mid)' }}>
+                            ★ destaque
+                          </span>
+                        )}
+                      </div>
                     </td>
 
-                    {/* Coleção */}
-                    <td
-                      style={{
-                        padding: '16px 16px 16px 0',
-                        fontSize: '0.78rem',
-                        color: 'var(--mid)',
-                        whiteSpace: 'nowrap',
-                      }}
-                    >
+                    <td style={{ padding: '16px 16px 16px 0', fontSize: '0.78rem', color: 'var(--mid)', whiteSpace: 'nowrap' }}>
                       {obra.colecao}
                     </td>
-
-                    {/* Tipo */}
-                    <td
-                      style={{
-                        padding: '16px 16px 16px 0',
-                        fontSize: '0.78rem',
-                        color: 'var(--text)',
-                        whiteSpace: 'nowrap',
-                      }}
-                    >
+                    <td style={{ padding: '16px 16px 16px 0', fontSize: '0.78rem', color: 'var(--text)', whiteSpace: 'nowrap' }}>
                       {obra.tipo}
                     </td>
-
-                    {/* Ano */}
-                    <td
-                      style={{
-                        padding: '16px 16px 16px 0',
-                        fontSize: '0.78rem',
-                        color: 'var(--text)',
-                      }}
-                    >
+                    <td style={{ padding: '16px 16px 16px 0', fontSize: '0.78rem', color: 'var(--text)' }}>
                       {obra.ano}
                     </td>
 
-                    {/* Disponibilidade */}
                     <td style={{ padding: '16px 16px 16px 0' }}>
                       <span
                         style={{
@@ -285,41 +393,27 @@ export default function Dashboard() {
                       </span>
                     </td>
 
-                    {/* Ações */}
                     <td style={{ padding: '16px 0', whiteSpace: 'nowrap' }}>
                       <button
-                        onClick={() =>
-                          navigate(`/painel-ayume/obras/${obra.slug}/editar`)
-                        }
-                        style={{
-                          fontFamily: 'var(--sans)',
-                          fontSize: '0.65rem',
-                          letterSpacing: '0.1em',
-                          textTransform: 'uppercase',
-                          color: 'var(--text)',
-                          background: 'none',
-                          border: 'none',
-                          cursor: 'pointer',
-                          marginRight: '16px',
-                          textDecoration: 'underline',
-                        }}
+                        onClick={() => navigate(`/painel-ayume/obras/${obra.slug}/editar`)}
+                        style={{ fontFamily: 'var(--sans)', fontSize: '0.65rem', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--text)', background: 'none', border: 'none', cursor: 'pointer', marginRight: '12px', textDecoration: 'underline' }}
                       >
                         Editar
                       </button>
                       <button
-                        onClick={() => handleDeletar(obra.slug, obra.titulo)}
-                        style={{
-                          fontFamily: 'var(--sans)',
-                          fontSize: '0.65rem',
-                          letterSpacing: '0.1em',
-                          textTransform: 'uppercase',
-                          color: '#8a3030',
-                          background: 'none',
-                          border: 'none',
-                          cursor: 'pointer',
-                        }}
+                        onClick={() => handleToggleVisivel(obra.slug, obra.visivel !== false)}
+                        disabled={toggling === obra.slug}
+                        title={obra.visivel === false ? 'Publicar' : 'Ocultar'}
+                        style={{ fontFamily: 'var(--sans)', fontSize: '0.65rem', letterSpacing: '0.1em', textTransform: 'uppercase', color: obra.visivel === false ? '#3a6b3a' : 'var(--mid)', background: 'none', border: 'none', cursor: toggling === obra.slug ? 'not-allowed' : 'pointer', marginRight: '12px', opacity: toggling === obra.slug ? 0.5 : 1 }}
                       >
-                        Deletar
+                        {toggling === obra.slug ? '...' : obra.visivel === false ? 'Publicar' : 'Ocultar'}
+                      </button>
+                      <button
+                        onClick={() => handleDeletar(obra.slug, obra.titulo)}
+                        disabled={deletando === obra.slug}
+                        style={{ fontFamily: 'var(--sans)', fontSize: '0.65rem', letterSpacing: '0.1em', textTransform: 'uppercase', color: '#8a3030', background: 'none', border: 'none', cursor: deletando === obra.slug ? 'not-allowed' : 'pointer', opacity: deletando === obra.slug ? 0.5 : 1 }}
+                      >
+                        {deletando === obra.slug ? '...' : 'Deletar'}
                       </button>
                     </td>
                   </tr>

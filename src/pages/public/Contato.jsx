@@ -1,31 +1,30 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useObras } from '@/context/ObrasContext';
+import { useConfiguracoes } from '@/hooks/useConfiguracoes';
 import Footer from '@/components/public/Footer';
 import { BtnBlack } from '@/components/public/ui';
 
 export default function Contato() {
   const [searchParams] = useSearchParams();
   const { getObra } = useObras();
+  const { config } = useConfiguracoes();
   const [visible, setVisible] = useState(false);
 
   const obraSlug = searchParams.get('obra');
   const obraPreset = obraSlug ? getObra(obraSlug) : null;
-  const obraPresetTitulo = obraPreset ? obraPreset.titulo : '';
 
   const [form, setForm] = useState({
     nome: '',
     email: '',
-    obra: obraPresetTitulo,
+    obra: obraPreset?.titulo || '',
     mensagem: '',
   });
   const [sent, setSent] = useState(false);
 
   useEffect(() => {
-    if (obraPresetTitulo) {
-      setForm(f => ({ ...f, obra: obraPresetTitulo }));
-    }
-  }, [obraPresetTitulo]);
+    if (obraPreset?.titulo) setForm(f => ({ ...f, obra: obraPreset.titulo }));
+  }, [obraPreset?.titulo]);
 
   useEffect(() => {
     const t = setTimeout(() => setVisible(true), 10);
@@ -41,6 +40,11 @@ export default function Contato() {
     setSent(true);
   }
 
+  const contato = config?.contato || {};
+  const emailContato = contato.email || 'ayumeandrade@gmail.com';
+  const instagram = contato.instagram || '@ayuandrade';
+  const instagramUrl = contato.instagramUrl || 'https://www.instagram.com/ayuandrade/';
+
   const inputStyle = {
     width: '100%',
     border: 'none',
@@ -52,7 +56,6 @@ export default function Contato() {
     color: 'var(--text)',
     outline: 'none',
   };
-
   const labelStyle = {
     fontFamily: 'var(--sans)',
     fontSize: '0.6rem',
@@ -135,60 +138,62 @@ export default function Contato() {
               >
                 <div>
                   <label style={labelStyle} htmlFor="nome">Nome</label>
-                  <input
-                    id="nome"
-                    type="text"
-                    required
-                    value={form.nome}
-                    onChange={e => set('nome', e.target.value)}
-                    style={inputStyle}
-                  />
+                  <input id="nome" type="text" required value={form.nome}
+                    onChange={e => set('nome', e.target.value)} style={inputStyle} />
                 </div>
                 <div>
                   <label style={labelStyle} htmlFor="email">E-mail</label>
-                  <input
-                    id="email"
-                    type="email"
-                    required
-                    value={form.email}
-                    onChange={e => set('email', e.target.value)}
-                    style={inputStyle}
-                  />
+                  <input id="email" type="email" required value={form.email}
+                    onChange={e => set('email', e.target.value)} style={inputStyle} />
                 </div>
                 <div>
-                  <label style={labelStyle} htmlFor="obra">
-                    Obra de interesse (opcional)
-                  </label>
-                  <input
-                    id="obra"
-                    type="text"
-                    value={form.obra}
-                    onChange={e => set('obra', e.target.value)}
-                    style={inputStyle}
-                  />
+                  <label style={labelStyle} htmlFor="obra">Obra de interesse (opcional)</label>
+                  <input id="obra" type="text" value={form.obra}
+                    onChange={e => set('obra', e.target.value)} style={inputStyle} />
                 </div>
                 <div>
                   <label style={labelStyle} htmlFor="mensagem">Mensagem</label>
-                  <textarea
-                    id="mensagem"
-                    rows={5}
-                    value={form.mensagem}
+                  <textarea id="mensagem" rows={5} value={form.mensagem}
                     onChange={e => set('mensagem', e.target.value)}
-                    style={{ ...inputStyle, resize: 'none' }}
-                  />
+                    style={{ ...inputStyle, resize: 'none' }} />
                 </div>
-                <BtnBlack
-                  label="Enviar mensagem →"
-                  type="submit"
-                  style={{ marginTop: '8px' }}
-                />
+                <BtnBlack label="Enviar mensagem →" type="submit" style={{ marginTop: '8px' }} />
               </form>
             )}
           </div>
 
-          {/* Informações de contato */}
+          {/* Informações */}
           <div style={{ paddingTop: '8px' }}>
-            <div style={{ marginBottom: '48px' }}>
+            <div style={{ marginBottom: '40px' }}>
+              <div
+                style={{
+                  fontFamily: 'var(--sans)',
+                  fontSize: '0.58rem',
+                  letterSpacing: '0.28em',
+                  textTransform: 'uppercase',
+                  color: 'var(--mid)',
+                  marginBottom: '16px',
+                }}
+              >
+                WhatsApp
+              </div>
+              <a
+                href={`https://wa.me/${contato.whatsapp}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  fontFamily: 'var(--serif)',
+                  fontSize: '1.1rem',
+                  fontStyle: 'italic',
+                  color: 'var(--text)',
+                  textDecoration: 'none',
+                }}
+              >
+                Enviar mensagem →
+              </a>
+            </div>
+
+            <div style={{ marginBottom: '40px' }}>
               <div
                 style={{
                   fontFamily: 'var(--sans)',
@@ -201,16 +206,20 @@ export default function Contato() {
               >
                 E-mail
               </div>
-              <div
+              <a
+                href={`mailto:${emailContato}`}
                 style={{
                   fontFamily: 'var(--serif)',
                   fontSize: '1.1rem',
                   fontStyle: 'italic',
+                  color: 'var(--text)',
+                  textDecoration: 'none',
                 }}
               >
-                contato@ayumeandrade.com.br
-              </div>
+                {emailContato}
+              </a>
             </div>
+
             <div>
               <div
                 style={{
@@ -224,16 +233,22 @@ export default function Contato() {
               >
                 Instagram
               </div>
-              <div
+              <a
+                href={instagramUrl}
+                target="_blank"
+                rel="noopener noreferrer"
                 style={{
                   fontFamily: 'var(--serif)',
                   fontSize: '1.1rem',
                   fontStyle: 'italic',
+                  color: 'var(--text)',
+                  textDecoration: 'none',
                 }}
               >
-                @ayumeandrade
-              </div>
+                {instagram}
+              </a>
             </div>
+
             <div
               style={{
                 marginTop: '64px',
@@ -245,9 +260,8 @@ export default function Contato() {
                 color: 'var(--mid)',
               }}
             >
-              Respondemos a todas as consultas em até 3 dias úteis. Para questões
-              sobre disponibilidade de obras, informe o título da obra no campo
-              correspondente.
+              Respondemos a todas as consultas em até 3 dias úteis. Para questões sobre
+              disponibilidade de obras, informe o título da obra no campo correspondente.
             </div>
           </div>
         </div>

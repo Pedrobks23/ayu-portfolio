@@ -5,17 +5,16 @@ import { ObrasProvider } from '@/context/ObrasContext';
 import RotaProtegida from '@/components/admin/RotaProtegida';
 import Header from '@/components/public/Header';
 
-// Páginas públicas (carregamento imediato)
 import Inicio from '@/pages/public/Inicio';
 import Catalogo from '@/pages/public/Catalogo';
 import Obra from '@/pages/public/Obra';
 import Sobre from '@/pages/public/Sobre';
 import Contato from '@/pages/public/Contato';
 
-// Páginas admin (lazy loaded)
-const Login    = lazy(() => import('@/pages/admin/Login'));
-const Dashboard = lazy(() => import('@/pages/admin/Dashboard'));
-const ObraForm  = lazy(() => import('@/pages/admin/ObraForm'));
+const Login          = lazy(() => import('@/pages/admin/Login'));
+const Dashboard      = lazy(() => import('@/pages/admin/Dashboard'));
+const ObraForm       = lazy(() => import('@/pages/admin/ObraForm'));
+const Configuracoes  = lazy(() => import('@/pages/admin/Configuracoes'));
 
 function PublicLayout() {
   return (
@@ -32,7 +31,6 @@ export default function App() {
       <ObrasProvider>
         <BrowserRouter>
           <Routes>
-            {/* Vitrine pública */}
             <Route element={<PublicLayout />}>
               <Route path="/" element={<Inicio />} />
               <Route path="/catalogo" element={<Catalogo />} />
@@ -41,24 +39,16 @@ export default function App() {
               <Route path="/contato" element={<Contato />} />
             </Route>
 
-            {/* Login — sem proteção e sem layout admin */}
             <Route
               path="/painel-ayume/login"
-              element={
-                <Suspense fallback={null}>
-                  <Login />
-                </Suspense>
-              }
+              element={<Suspense fallback={null}><Login /></Suspense>}
             />
 
-            {/* Rotas admin protegidas */}
             <Route
               path="/painel-ayume/dashboard"
               element={
                 <RotaProtegida>
-                  <Suspense fallback={null}>
-                    <Dashboard />
-                  </Suspense>
+                  <Suspense fallback={null}><Dashboard /></Suspense>
                 </RotaProtegida>
               }
             />
@@ -66,9 +56,7 @@ export default function App() {
               path="/painel-ayume/obras/nova"
               element={
                 <RotaProtegida>
-                  <Suspense fallback={null}>
-                    <ObraForm />
-                  </Suspense>
+                  <Suspense fallback={null}><ObraForm /></Suspense>
                 </RotaProtegida>
               }
             />
@@ -76,14 +64,19 @@ export default function App() {
               path="/painel-ayume/obras/:slug/editar"
               element={
                 <RotaProtegida>
-                  <Suspense fallback={null}>
-                    <ObraForm />
-                  </Suspense>
+                  <Suspense fallback={null}><ObraForm /></Suspense>
+                </RotaProtegida>
+              }
+            />
+            <Route
+              path="/painel-ayume/configuracoes"
+              element={
+                <RotaProtegida>
+                  <Suspense fallback={null}><Configuracoes /></Suspense>
                 </RotaProtegida>
               }
             />
 
-            {/* Fallback */}
             <Route path="*" element={<Inicio />} />
           </Routes>
         </BrowserRouter>

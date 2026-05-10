@@ -1,10 +1,15 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import imageCompression from 'browser-image-compression';
 import { useObras } from '@/context/ObrasContext';
+import { uploadImagem, urlOtimizada } from '@/lib/cloudinary';
 import { slugify } from '@/lib/utils';
 
 const DISPONIBILIDADES = ['Disponível', 'Sob consulta', 'Indisponível'];
 const TIPOS = ['Escultura', 'Pintura'];
+const MAX_IMAGENS = 5;
+const MAX_MB = 8;
+const FORMATOS = ['image/jpeg', 'image/png', 'image/webp'];
 
 const estadoVazio = {
   titulo: '',
@@ -15,57 +20,143 @@ const estadoVazio = {
   dimensoes: '',
   disponibilidade: 'Disponível',
   descricao: '',
-  imgSeeds: [100, 200, 300],
+  visivel: true,
   destaque: false,
   ordem: 0,
 };
 
+function makeId() {
+  return Math.random().toString(36).slice(2);
+}
+
 export default function FormObra({ obraExistente }) {
   const navigate = useNavigate();
   const { criarObra, atualizarObra, obras } = useObras();
-  const [form, setForm] = useState(obraExistente || estadoVazio);
-  const [seedsInput, setSeedsInput] = useState(
-    obraExistente ? obraExistente.imgSeeds.join(', ') : '100, 200, 300'
-  );
-  const [slugPreview, setSlugPreview] = useState(
-    obraExistente ? obraExistente.slug : ''
+  const fileRef = useRef(null);
+
+  const [form, setForm] = useState(() => {
+    if (!obraExistente) return estadoVazio;
+    const { imagens: _, slug: __, criadoEm: ___, atualizadoEm: ____, ...rest } = obraExistente;
+    return rest;
+  });
+
+  const [slugPreview, setSlugPreview] = useState(obraExistente?.slug || '');
+  const [imagens, setImagens] = useState(() =>
+    (obraExistente?.imagens || []).map(img => ({
+      id: makeId(),
+      publicId: img.publicId,
+      url: img.url,
+      preview: img.url,
+      uploading: false,
+      erro: null,
+    }))
   );
   const [erro, setErro] = useState('');
+  const [salvando, setSalvando] = useState(false);
 
-  const colecoes = [...new Set(obras.map(o => o.colecao).filter(Boolean))];
   const editando = Boolean(obraExistente);
+  const colecoes = [...new Set(obras.map(o => o.colecao).filter(Boolean))];
+  const uploadandoAlguma = imagens.some(i => i.uploading);
 
   useEffect(() => {
-    if (!editando) {
-      setSlugPreview(slugify(form.titulo));
-    }
+    if (!editando) setSlugPreview(slugify(form.titulo));
   }, [form.titulo, editando]);
 
   function set(key, value) {
     setForm(prev => ({ ...prev, [key]: value }));
   }
 
-  function parseSeeds(raw) {
-    return raw
-      .split(',')
-      .map(s => parseInt(s.trim(), 10))
-      .filter(n => !isNaN(n))
-      .slice(0, 3);
+  async function handleAddImagens(e) {
+    const files = Array.from(e.target.files || []);
+    e.target.value = '';
+    if (!files.length) return;
+
+    const slots = MAX_IMAGENS - imagens.filter(i => !i.erro).length;
+    if (slots <= 0) {
+      setErro(`Máximo de ${MAX_IMAGENS} imagens por obra.`);
+      return;
+    }
+
+    const validos = [];
+    for (const file of files.slice(0, slots)) {
+      if (!FORMATOS.includes(file.type)) {
+        setErro('Formato inválido. Use JPG, PNG ou WebP.');
+        continue;
+      }
+      if (file.size > MAX_MB * 1024 * 1024) {
+        setErro(`"${file.name}" excede ${MAX_MB}MB.`);
+        continue;
+      }
+      validos.push(file);
+    }
+
+    if (!validos.length) return;
+    setErro('');
+
+    const novos = validos.map(file => ({
+      id: makeId(),
+      publicId: null,
+      url: null,
+      preview: URL.createObjectURL(file),
+      uploading: true,
+      erro: null,
+      _file: file,
+    }));
+
+    setImagens(prev => [...prev, ...novos]);
+
+    for (const item of novos) {
+      try {
+        const comprimida = await imageCompression(item._file, {
+          maxSizeMB: 2,
+          maxWidthOrHeight: 2400,
+          useWebWorker: true,
+        });
+        const { publicId, url } = await uploadImagem(comprimida);
+        URL.revokeObjectURL(item.preview);
+        setImagens(prev =>
+          prev.map(i =>
+            i.id === item.id
+              ? { ...i, publicId, url, preview: url, uploading: false, _file: undefined }
+              : i
+          )
+        );
+      } catch {
+        setImagens(prev =>
+          prev.map(i =>
+            i.id === item.id
+              ? { ...i, uploading: false, erro: 'Falha no upload. Tente novamente.' }
+              : i
+          )
+        );
+      }
+    }
   }
 
-  function handleSeedsChange(raw) {
-    setSeedsInput(raw);
-    const seeds = parseSeeds(raw);
-    if (seeds.length > 0) set('imgSeeds', seeds);
+  function moverImagem(idx, direcao) {
+    setImagens(prev => {
+      const arr = [...prev];
+      const destino = idx + direcao;
+      if (destino < 0 || destino >= arr.length) return arr;
+      [arr[idx], arr[destino]] = [arr[destino], arr[idx]];
+      return arr;
+    });
   }
 
-  function handleSubmit(e) {
+  function removerImagem(id) {
+    setImagens(prev => {
+      const img = prev.find(i => i.id === id);
+      if (img?.preview?.startsWith('blob:')) URL.revokeObjectURL(img.preview);
+      return prev.filter(i => i.id !== id);
+    });
+  }
+
+  async function handleSubmit(e) {
     e.preventDefault();
     setErro('');
 
-    const seeds = parseSeeds(seedsInput);
-    if (seeds.length === 0) {
-      setErro('Informe ao menos um seed de imagem.');
+    if (uploadandoAlguma) {
+      setErro('Aguarde o upload das imagens terminar.');
       return;
     }
 
@@ -74,21 +165,29 @@ export default function FormObra({ obraExistente }) {
       setErro('O título não gerou um slug válido.');
       return;
     }
-
-    const obra = { ...form, imgSeeds: seeds, slug };
-
-    if (editando) {
-      atualizarObra(obraExistente.slug, obra);
-    } else {
-      const existe = obras.find(o => o.slug === slug);
-      if (existe) {
-        setErro(`Já existe uma obra com o slug "${slug}". Altere o título.`);
-        return;
-      }
-      criarObra(obra);
+    if (!editando && obras.find(o => o.slug === slug)) {
+      setErro(`Já existe uma obra com o slug "${slug}". Altere o título.`);
+      return;
     }
 
-    navigate('/painel-ayume/dashboard');
+    const imagensSalvas = imagens
+      .filter(i => i.publicId && !i.erro)
+      .map((i, idx) => ({ publicId: i.publicId, url: i.url, ordem: idx }));
+
+    const dadosObra = { ...form, slug, imagens: imagensSalvas };
+
+    setSalvando(true);
+    try {
+      if (editando) {
+        await atualizarObra(obraExistente.slug, dadosObra);
+      } else {
+        await criarObra(slug, dadosObra);
+      }
+      navigate('/painel-ayume/dashboard');
+    } catch {
+      setErro('Erro ao salvar. Verifique sua conexão e tente novamente.');
+      setSalvando(false);
+    }
   }
 
   const inputStyle = {
@@ -102,7 +201,6 @@ export default function FormObra({ obraExistente }) {
     color: 'var(--text)',
     outline: 'none',
   };
-
   const labelStyle = {
     fontFamily: 'var(--sans)',
     fontSize: '0.6rem',
@@ -112,12 +210,7 @@ export default function FormObra({ obraExistente }) {
     display: 'block',
     marginBottom: '8px',
   };
-
-  const selectStyle = {
-    ...inputStyle,
-    cursor: 'pointer',
-    appearance: 'none',
-  };
+  const selectStyle = { ...inputStyle, cursor: 'pointer', appearance: 'none' };
 
   return (
     <form onSubmit={handleSubmit}>
@@ -130,53 +223,33 @@ export default function FormObra({ obraExistente }) {
       >
         {/* Coluna esquerda */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
-          {/* Título */}
           <div>
             <label style={labelStyle} htmlFor="titulo">Título</label>
             <input
-              id="titulo"
-              type="text"
-              required
+              id="titulo" type="text" required
               value={form.titulo}
               onChange={e => set('titulo', e.target.value)}
               style={inputStyle}
               placeholder="quando se corrói"
             />
             {!editando && slugPreview && (
-              <div
-                style={{
-                  fontFamily: 'var(--sans)',
-                  fontSize: '0.65rem',
-                  color: 'var(--mid)',
-                  marginTop: '6px',
-                  letterSpacing: '0.05em',
-                }}
-              >
+              <div style={{ fontFamily: 'var(--sans)', fontSize: '0.65rem', color: 'var(--mid)', marginTop: '6px' }}>
                 slug: <em>{slugPreview}</em>
               </div>
             )}
           </div>
 
-          {/* Tipo */}
           <div>
             <label style={labelStyle} htmlFor="tipo">Tipo</label>
-            <select
-              id="tipo"
-              value={form.tipo}
-              onChange={e => set('tipo', e.target.value)}
-              style={selectStyle}
-            >
+            <select id="tipo" value={form.tipo} onChange={e => set('tipo', e.target.value)} style={selectStyle}>
               {TIPOS.map(t => <option key={t} value={t}>{t}</option>)}
             </select>
           </div>
 
-          {/* Coleção */}
           <div>
             <label style={labelStyle} htmlFor="colecao">Coleção</label>
             <input
-              id="colecao"
-              type="text"
-              list="colecoes-lista"
+              id="colecao" type="text" list="colecoes-lista"
               value={form.colecao}
               onChange={e => set('colecao', e.target.value)}
               style={inputStyle}
@@ -187,27 +260,18 @@ export default function FormObra({ obraExistente }) {
             </datalist>
           </div>
 
-          {/* Ano */}
           <div>
             <label style={labelStyle} htmlFor="ano">Ano</label>
-            <input
-              id="ano"
-              type="number"
-              required
-              min="1900"
-              max="2100"
+            <input id="ano" type="number" required min="1900" max="2100"
               value={form.ano}
               onChange={e => set('ano', parseInt(e.target.value, 10))}
               style={inputStyle}
             />
           </div>
 
-          {/* Técnica */}
           <div>
             <label style={labelStyle} htmlFor="tecnica">Técnica</label>
-            <input
-              id="tecnica"
-              type="text"
+            <input id="tecnica" type="text"
               value={form.tecnica}
               onChange={e => set('tecnica', e.target.value)}
               style={inputStyle}
@@ -215,12 +279,9 @@ export default function FormObra({ obraExistente }) {
             />
           </div>
 
-          {/* Dimensões */}
           <div>
             <label style={labelStyle} htmlFor="dimensoes">Dimensões</label>
-            <input
-              id="dimensoes"
-              type="text"
+            <input id="dimensoes" type="text"
               value={form.dimensoes}
               onChange={e => set('dimensoes', e.target.value)}
               style={inputStyle}
@@ -231,25 +292,17 @@ export default function FormObra({ obraExistente }) {
 
         {/* Coluna direita */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
-          {/* Disponibilidade */}
           <div>
             <label style={labelStyle} htmlFor="disponibilidade">Disponibilidade</label>
-            <select
-              id="disponibilidade"
-              value={form.disponibilidade}
-              onChange={e => set('disponibilidade', e.target.value)}
-              style={selectStyle}
-            >
+            <select id="disponibilidade" value={form.disponibilidade}
+              onChange={e => set('disponibilidade', e.target.value)} style={selectStyle}>
               {DISPONIBILIDADES.map(d => <option key={d} value={d}>{d}</option>)}
             </select>
           </div>
 
-          {/* Descrição */}
           <div>
             <label style={labelStyle} htmlFor="descricao">Descrição (opcional)</label>
-            <textarea
-              id="descricao"
-              rows={4}
+            <textarea id="descricao" rows={4}
               value={form.descricao}
               onChange={e => set('descricao', e.target.value)}
               style={{ ...inputStyle, resize: 'vertical' }}
@@ -257,76 +310,220 @@ export default function FormObra({ obraExistente }) {
             />
           </div>
 
-          {/* Image seeds */}
-          <div>
-            <label style={labelStyle} htmlFor="imgSeeds">
-              Seeds de imagem (1–3 números separados por vírgula)
-            </label>
-            <input
-              id="imgSeeds"
-              type="text"
-              value={seedsInput}
-              onChange={e => handleSeedsChange(e.target.value)}
-              style={inputStyle}
-              placeholder="431, 892, 312"
-            />
-            {/* Preview das imagens */}
-            <div style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
-              {parseSeeds(seedsInput).map((seed, i) => (
-                <div
-                  key={i}
-                  style={{
-                    flex: 1,
-                    aspectRatio: '1/1',
-                    overflow: 'hidden',
-                    background: '#0D0D0D',
-                  }}
-                >
-                  <img
-                    src={`https://picsum.photos/seed/${seed}/200/200`}
-                    alt={`Preview ${i + 1}`}
-                    style={{
-                      width: '100%',
-                      height: '100%',
-                      objectFit: 'cover',
-                      display: 'block',
-                      filter: 'grayscale(15%) brightness(0.8)',
-                    }}
-                  />
-                </div>
-              ))}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <input id="visivel" type="checkbox"
+                checked={form.visivel !== false}
+                onChange={e => set('visivel', e.target.checked)}
+                style={{ width: '16px', height: '16px', cursor: 'pointer' }}
+              />
+              <label htmlFor="visivel" style={{ ...labelStyle, marginBottom: 0, cursor: 'pointer' }}>
+                Publicada (visível no catálogo)
+              </label>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <input id="destaque" type="checkbox"
+                checked={form.destaque}
+                onChange={e => set('destaque', e.target.checked)}
+                style={{ width: '16px', height: '16px', cursor: 'pointer' }}
+              />
+              <label htmlFor="destaque" style={{ ...labelStyle, marginBottom: 0, cursor: 'pointer' }}>
+                Aparecer na página inicial (destaque)
+              </label>
             </div>
           </div>
 
-          {/* Destaque */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <input
-              id="destaque"
-              type="checkbox"
-              checked={form.destaque}
-              onChange={e => set('destaque', e.target.checked)}
-              style={{ width: '16px', height: '16px', cursor: 'pointer' }}
-            />
-            <label
-              htmlFor="destaque"
-              style={{ ...labelStyle, marginBottom: 0, cursor: 'pointer' }}
-            >
-              Exibir na página inicial (destaque)
-            </label>
-          </div>
-
-          {/* Ordem */}
           <div>
             <label style={labelStyle} htmlFor="ordem">Ordem de exibição</label>
-            <input
-              id="ordem"
-              type="number"
-              min="0"
+            <input id="ordem" type="number" min="0"
               value={form.ordem}
               onChange={e => set('ordem', parseInt(e.target.value, 10))}
               style={inputStyle}
             />
           </div>
+        </div>
+      </div>
+
+      {/* Bloco de imagens */}
+      <div style={{ marginTop: '40px' }}>
+        {/* Caixa de orientação */}
+        <div
+          style={{
+            background: 'rgba(197,192,186,0.18)',
+            border: '1px solid rgba(197,192,186,0.5)',
+            padding: '16px 20px',
+            marginBottom: '24px',
+            fontFamily: 'var(--sans)',
+            fontSize: '0.72rem',
+            lineHeight: 1.75,
+            color: 'var(--mid)',
+          }}
+        >
+          <strong style={{ color: 'var(--text)' }}>Dicas pras imagens</strong>
+          <ul style={{ margin: '8px 0 0', paddingLeft: '18px' }}>
+            <li>Até {MAX_IMAGENS} imagens por obra</li>
+            <li>Tamanho máximo: {MAX_MB}MB por imagem</li>
+            <li>Formatos aceitos: JPG, PNG, WebP</li>
+            <li>A primeira imagem é a capa (use ↑↓ pra reordenar)</li>
+            <li>Marque "Aparecer na página inicial" pra destacar a obra na Home</li>
+            <li>Use boas fotos com fundo neutro pra melhor apresentação</li>
+          </ul>
+        </div>
+
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: '16px',
+          }}
+        >
+          <label style={{ ...labelStyle, margin: 0 }}>
+            Imagens ({imagens.filter(i => i.publicId).length}/{MAX_IMAGENS})
+          </label>
+          <button
+            type="button"
+            onClick={() => fileRef.current?.click()}
+            disabled={imagens.filter(i => !i.erro).length >= MAX_IMAGENS}
+            style={{
+              fontFamily: 'var(--sans)',
+              fontSize: '0.6rem',
+              letterSpacing: '0.15em',
+              textTransform: 'uppercase',
+              background: 'none',
+              border: '1px solid rgba(26,26,26,0.3)',
+              padding: '8px 18px',
+              cursor: 'pointer',
+              color: 'var(--text)',
+              opacity: imagens.filter(i => !i.erro).length >= MAX_IMAGENS ? 0.4 : 1,
+            }}
+          >
+            + Adicionar imagem
+          </button>
+          <input
+            ref={fileRef}
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            multiple
+            style={{ display: 'none' }}
+            onChange={handleAddImagens}
+          />
+        </div>
+
+        {/* Lista de imagens */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          {imagens.map((img, idx) => (
+            <div
+              key={img.id}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+                padding: '10px 12px',
+                background: img.erro ? 'rgba(138,48,48,0.05)' : 'rgba(197,192,186,0.12)',
+                border: `1px solid ${img.erro ? 'rgba(138,48,48,0.2)' : 'rgba(197,192,186,0.4)'}`,
+              }}
+            >
+              {/* Thumb */}
+              <div
+                style={{
+                  width: '52px',
+                  height: '52px',
+                  flexShrink: 0,
+                  overflow: 'hidden',
+                  background: '#0D0D0D',
+                  position: 'relative',
+                }}
+              >
+                <img
+                  src={img.preview}
+                  alt=""
+                  style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                />
+                {img.uploading && (
+                  <div
+                    style={{
+                      position: 'absolute',
+                      inset: 0,
+                      background: 'rgba(0,0,0,0.55)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '0.6rem',
+                      color: 'white',
+                      fontFamily: 'var(--sans)',
+                    }}
+                  >
+                    ...
+                  </div>
+                )}
+              </div>
+
+              {/* Info */}
+              <div style={{ flex: 1, minWidth: 0 }}>
+                {idx === 0 && !img.erro && (
+                  <span
+                    style={{
+                      fontFamily: 'var(--sans)',
+                      fontSize: '0.55rem',
+                      letterSpacing: '0.15em',
+                      textTransform: 'uppercase',
+                      color: 'var(--mid)',
+                      border: '1px solid rgba(26,26,26,0.2)',
+                      padding: '2px 8px',
+                      display: 'inline-block',
+                      marginBottom: '4px',
+                    }}
+                  >
+                    Capa
+                  </span>
+                )}
+                {img.uploading && (
+                  <div style={{ fontFamily: 'var(--sans)', fontSize: '0.68rem', color: 'var(--mid)' }}>
+                    Fazendo upload...
+                  </div>
+                )}
+                {img.erro && (
+                  <div style={{ fontFamily: 'var(--sans)', fontSize: '0.68rem', color: '#8a3030' }}>
+                    {img.erro}
+                  </div>
+                )}
+                {img.publicId && !img.uploading && (
+                  <div
+                    style={{
+                      fontFamily: 'var(--sans)',
+                      fontSize: '0.65rem',
+                      color: 'var(--mid)',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    {img.publicId}
+                  </div>
+                )}
+              </div>
+
+              {/* Controles */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 0 }}>
+                <button type="button" onClick={() => moverImagem(idx, -1)} disabled={idx === 0}
+                  title="Mover para cima"
+                  style={{ background: 'none', border: 'none', cursor: idx === 0 ? 'default' : 'pointer', opacity: idx === 0 ? 0.3 : 1, padding: '4px 6px', fontSize: '0.8rem', color: 'var(--text)' }}>
+                  ↑
+                </button>
+                <button type="button" onClick={() => moverImagem(idx, 1)} disabled={idx === imagens.length - 1}
+                  title="Mover para baixo"
+                  style={{ background: 'none', border: 'none', cursor: idx === imagens.length - 1 ? 'default' : 'pointer', opacity: idx === imagens.length - 1 ? 0.3 : 1, padding: '4px 6px', fontSize: '0.8rem', color: 'var(--text)' }}>
+                  ↓
+                </button>
+                <button type="button" onClick={() => removerImagem(img.id)}
+                  title="Remover imagem"
+                  style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px 8px', fontSize: '0.85rem', color: '#8a3030', marginLeft: '4px' }}>
+                  ×
+                </button>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
 
@@ -360,6 +557,7 @@ export default function FormObra({ obraExistente }) {
       >
         <button
           type="submit"
+          disabled={salvando || uploadandoAlguma}
           style={{
             fontFamily: 'var(--sans)',
             fontSize: '0.62rem',
@@ -369,10 +567,11 @@ export default function FormObra({ obraExistente }) {
             color: 'var(--bg)',
             border: 'none',
             padding: '16px 36px',
-            cursor: 'pointer',
+            cursor: salvando || uploadandoAlguma ? 'not-allowed' : 'pointer',
+            opacity: salvando || uploadandoAlguma ? 0.5 : 1,
           }}
         >
-          {editando ? 'Salvar alterações' : 'Criar obra'}
+          {salvando ? 'Salvando...' : editando ? 'Salvar alterações' : 'Criar obra'}
         </button>
         <button
           type="button"

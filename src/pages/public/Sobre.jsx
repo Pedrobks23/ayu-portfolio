@@ -3,15 +3,19 @@ import { useNavigate } from 'react-router-dom';
 import FadeImg from '@/components/public/FadeImg';
 import Footer from '@/components/public/Footer';
 import { HoverUnderlineBtn } from '@/components/public/ui';
+import { useConfiguracoes } from '@/hooks/useConfiguracoes';
 
 export default function Sobre() {
   const navigate = useNavigate();
+  const { config } = useConfiguracoes();
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
     const t = setTimeout(() => setVisible(true), 10);
     return () => clearTimeout(t);
   }, []);
+
+  const bio = config?.bio || '';
 
   return (
     <div
@@ -78,24 +82,6 @@ export default function Sobre() {
               Ayume Andrade
             </h1>
 
-            {/* Citação de abertura */}
-            <div
-              style={{
-                fontFamily: 'var(--serif)',
-                fontSize: 'clamp(1.2rem,2.5vw,1.6rem)',
-                fontStyle: 'italic',
-                fontWeight: 300,
-                lineHeight: 1.5,
-                color: 'var(--text)',
-                borderLeft: '1px solid rgba(26,26,26,0.2)',
-                paddingLeft: '24px',
-                marginBottom: '36px',
-              }}
-            >
-              "Trabalho com aquilo que se quebra — e com o que insiste em permanecer."
-            </div>
-
-            {/* TODO: substituir pela bio real da Ayume */}
             <div
               style={{
                 fontFamily: 'var(--sans)',
@@ -103,23 +89,15 @@ export default function Sobre() {
                 lineHeight: 1.85,
                 color: '#555',
                 marginBottom: '32px',
+                whiteSpace: 'pre-wrap',
               }}
             >
-              Ayume Andrade é escultora e pintora com base em São Paulo. Sua prática
-              investiga os limites da matéria, o tempo que corrói e transforma, e a
-              memória que se sedimenta nos objetos. Formada em Artes Visuais, realizou
-              exposições individuais e coletivas no Brasil e exterior.
+              {bio}
             </div>
 
             <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
-              <HoverUnderlineBtn
-                label="Contato →"
-                onClick={() => navigate('/contato')}
-              />
-              <HoverUnderlineBtn
-                label="Catálogo →"
-                onClick={() => navigate('/catalogo')}
-              />
+              <HoverUnderlineBtn label="Contato →" onClick={() => navigate('/contato')} />
+              <HoverUnderlineBtn label="Catálogo →" onClick={() => navigate('/catalogo')} />
             </div>
           </div>
         </div>

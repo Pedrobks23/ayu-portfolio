@@ -35,6 +35,21 @@ img {
 button {
   -webkit-appearance: none;
   appearance: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* Evita cursor de texto em elementos não editáveis */
+a, label, th, td, header, footer, nav, section, article,
+[role="button"], [role="group"] {
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* Garante seleção normal onde precisa */
+input, textarea, [contenteditable] {
+  user-select: text;
+  -webkit-user-select: text;
 }
 
 ::-webkit-scrollbar {
