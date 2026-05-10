@@ -1,5 +1,6 @@
 import { lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Outlet } from 'react-router-dom';
+import { Analytics } from '@vercel/analytics/react';
 import { AuthProvider } from '@/context/AuthContext';
 import { ObrasProvider } from '@/context/ObrasContext';
 import RotaProtegida from '@/components/admin/RotaProtegida';
@@ -27,6 +28,7 @@ function PublicLayout() {
 
 export default function App() {
   return (
+    <>
     <AuthProvider>
       <ObrasProvider>
         <BrowserRouter>
@@ -82,5 +84,11 @@ export default function App() {
         </BrowserRouter>
       </ObrasProvider>
     </AuthProvider>
+    <Analytics
+      beforeSend={event =>
+        event.url.includes('/painel-ayume') ? null : event
+      }
+    />
+    </>
   );
 }

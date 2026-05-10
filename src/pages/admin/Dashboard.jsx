@@ -7,8 +7,72 @@ import { doc, updateDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 
 const CLOUDINARY_LINK = `https://console.cloudinary.com/pm/c-dlaew1b7j/media-explorer`;
+const VERCEL_ANALYTICS_LINK = `https://vercel.com/pedrobks23s-projects/ayu-portfolio/analytics`;
 const MAX_IMAGENS_POR_OBRA = 5;
 const CLOUDINARY_FREE_STORAGE_GB = 25;
+
+function AnalyticsCard() {
+  return (
+    <div
+      style={{
+        marginBottom: '20px',
+        padding: '20px 24px',
+        background: 'rgba(197,192,186,0.12)',
+        border: '1px solid rgba(197,192,186,0.4)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        flexWrap: 'wrap',
+        gap: '16px',
+      }}
+    >
+      <div>
+        <div
+          style={{
+            fontFamily: 'var(--sans)',
+            fontSize: '0.58rem',
+            letterSpacing: '0.2em',
+            textTransform: 'uppercase',
+            color: 'var(--mid)',
+            marginBottom: '6px',
+          }}
+        >
+          Visitas ao site
+        </div>
+        <div
+          style={{
+            fontFamily: 'var(--serif)',
+            fontSize: '0.9rem',
+            fontStyle: 'italic',
+            color: 'var(--mid)',
+            fontWeight: 300,
+          }}
+        >
+          Seus próprios acessos ao painel não são contabilizados
+        </div>
+      </div>
+      <a
+        href={VERCEL_ANALYTICS_LINK}
+        target="_blank"
+        rel="noopener noreferrer"
+        style={{
+          fontFamily: 'var(--sans)',
+          fontSize: '0.6rem',
+          letterSpacing: '0.18em',
+          textTransform: 'uppercase',
+          color: 'var(--text)',
+          border: '1px solid rgba(26,26,26,0.3)',
+          padding: '10px 20px',
+          textDecoration: 'none',
+          whiteSpace: 'nowrap',
+          flexShrink: 0,
+        }}
+      >
+        Ver analytics ↗
+      </a>
+    </div>
+  );
+}
 
 function UsageBar({ obras }) {
   const totalImagens = obras.reduce((acc, o) => acc + (o.imagens?.length || 0), 0);
@@ -226,6 +290,9 @@ export default function Dashboard() {
           + Nova obra
         </button>
       </div>
+
+      {/* Analytics */}
+      <AnalyticsCard />
 
       {/* Monitor de uso */}
       <UsageBar obras={obras} />
