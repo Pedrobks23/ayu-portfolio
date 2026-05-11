@@ -6,6 +6,9 @@ import Imagem from '@/components/public/Imagem';
 import ObraCard from '@/components/public/ObraCard';
 import Footer from '@/components/public/Footer';
 import { BtnBlack } from '@/components/public/ui';
+import { useT } from '@/i18n/useT';
+import { useLang } from '@/context/LanguageContext';
+import { getLocalized, traduzirDisponibilidade } from '@/i18n/getLocalized';
 
 function dispColor(disponibilidade) {
   if (disponibilidade === 'Disponível') return '#3a6b3a';
@@ -13,7 +16,7 @@ function dispColor(disponibilidade) {
   return 'var(--mid)';
 }
 
-function ModalContato({ obra, contato, onClose }) {
+function ModalContato({ obra, contato, onClose, t }) {
   const titulo = encodeURIComponent(obra.titulo);
   const whatsappUrl = `https://wa.me/${contato.whatsapp}?text=${encodeURIComponent(
     `Olá! Tenho interesse na obra "${obra.titulo}". Está disponível?`
@@ -76,7 +79,7 @@ function ModalContato({ obra, contato, onClose }) {
             marginBottom: '12px',
           }}
         >
-          Consultar disponibilidade
+          {t('obra.modalKicker')}
         </div>
         <div
           style={{
@@ -111,7 +114,7 @@ function ModalContato({ obra, contato, onClose }) {
               textDecoration: 'none',
             }}
           >
-            WhatsApp
+            {t('obra.whatsapp')}
           </a>
           <a
             href={emailUrl}
@@ -130,7 +133,7 @@ function ModalContato({ obra, contato, onClose }) {
               textDecoration: 'none',
             }}
           >
-            E-mail
+            {t('obra.email')}
           </a>
         </div>
       </div>
@@ -146,6 +149,8 @@ export default function Obra() {
   const [activeImg, setActiveImg] = useState(0);
   const [visible, setVisible] = useState(false);
   const [modalAberto, setModalAberto] = useState(false);
+  const { t } = useT();
+  const { lang } = useLang();
 
   const obra = getObra(slug) ?? (!loading ? obras[0] : null);
 
@@ -155,16 +160,33 @@ export default function Obra() {
   }, [slug]);
 
   useEffect(() => {
-    const t = setTimeout(() => setVisible(true), 10);
-    return () => clearTimeout(t);
+    const tId = setTimeout(() => setVisible(true), 10);
+    return () => clearTimeout(tId);
   }, []);
 
   if (loading) return null;
   if (!obra) return null;
 
   const imagens = obra.imagens || [];
-  const outras = obras.filter(o => o.slug !== slug).slice(0, 3);
+  const outras = obras.filter(o => o.slug !== slug && o.visivel !== false).slice(0, 3);
   const contato = config?.contato || {};
+
+  const titulo = getLocalized(obra, 'titulo', lang) || obra.titulo;
+  const tecnica = getLocalized(obra, 'tecnica', lang) || obra.tecnica;
+  const colecaoVal = getLocalized(obra, 'colecao', lang) || obra.colecao;
+  const descricao = getLocalized(obra, 'descricao', lang) || obra.descricao;
+
+  const metaRows = [
+    { label: t('obra.colecao'), value: colecaoVal, serif: true },
+    { label: t('obra.ano'), value: obra.ano },
+    { label: t('obra.tecnica'), value: tecnica },
+    { label: t('obra.dimensoes'), value: obra.dimensoes },
+    {
+      label: t('obra.disponibilidade'),
+      value: traduzirDisponibilidade(obra.disponibilidade, t),
+      color: dispColor(obra.disponibilidade),
+    },
+  ].filter(row => row.value);
 
   return (
     <div
@@ -175,7 +197,7 @@ export default function Obra() {
       }}
     >
       {modalAberto && (
-        <ModalContato obra={obra} contato={contato} onClose={() => setModalAberto(false)} />
+        <ModalContato obra={obra} contato={contato} onClose={() => setModalAberto(false)} t={t} />
       )}
 
       {/* Breadcrumb */}
@@ -196,7 +218,7 @@ export default function Obra() {
             gap: '8px',
           }}
         >
-          ← Catálogo
+          {t('obra.voltar')}
         </button>
       </div>
 
@@ -226,7 +248,7 @@ export default function Obra() {
               <img
                 key={activeImg}
                 src={imagens[activeImg].url}
-                alt={obra.titulo}
+                alt={titulo}
                 loading={activeImg === 0 ? 'eager' : 'lazy'}
                 style={{
                   width: '100%',
@@ -307,63 +329,51 @@ export default function Obra() {
               marginBottom: '40px',
             }}
           >
-            {obra.titulo}
+            {titulo}
           </h1>
 
           <table
             style={{
               width: '100%',
               borderCollapse: 'collapse',
-              marginBottom: obra.descricao ? '24px' : '40px',
+              marginBottom: descricao ? '24px' : '40px',
             }}
           >
             <tbody>
-              {[
-                { label: 'Coleção', value: obra.colecao, serif: true },
-                { label: 'Ano', value: obra.ano },
-                { label: 'Técnica', value: obra.tecnica },
-                { label: 'Dimensões', value: obra.dimensoes },
-                {
-                  label: 'Disponibilidade',
-                  value: obra.disponibilidade,
-                  color: dispColor(obra.disponibilidade),
-                },
-              ]
-                .filter(row => row.value)
-                .map(({ label, value, serif, color }) => (
-                  <tr key={label} style={{ borderBottom: '1px solid rgba(26,26,26,0.1)' }}>
-                    <td
-                      style={{
-                        padding: '16px 0',
-                        fontFamily: 'var(--sans)',
-                        fontSize: '0.6rem',
-                        letterSpacing: '0.2em',
-                        textTransform: 'uppercase',
-                        color: 'var(--mid)',
-                        width: '42%',
-                        verticalAlign: 'top',
-                      }}
-                    >
-                      {label}
-                    </td>
-                    <td
-                      style={{
-                        padding: '16px 0',
-                        fontFamily: serif ? 'var(--serif)' : 'var(--sans)',
-                        fontSize: serif ? '1rem' : '0.85rem',
-                        textAlign: 'right',
-                        color: color || 'var(--text)',
-                        fontStyle: serif ? 'italic' : 'normal',
-                      }}
-                    >
-                      {value}
-                    </td>
-                  </tr>
-                ))}
+              {metaRows.map(({ label, value, serif, color }) => (
+                <tr key={label} style={{ borderBottom: '1px solid rgba(26,26,26,0.1)' }}>
+                  <td
+                    style={{
+                      padding: '16px 0',
+                      fontFamily: 'var(--sans)',
+                      fontSize: '0.6rem',
+                      letterSpacing: '0.2em',
+                      textTransform: 'uppercase',
+                      color: 'var(--mid)',
+                      width: '42%',
+                      verticalAlign: 'top',
+                    }}
+                  >
+                    {label}
+                  </td>
+                  <td
+                    style={{
+                      padding: '16px 0',
+                      fontFamily: serif ? 'var(--serif)' : 'var(--sans)',
+                      fontSize: serif ? '1rem' : '0.85rem',
+                      textAlign: 'right',
+                      color: color || 'var(--text)',
+                      fontStyle: serif ? 'italic' : 'normal',
+                    }}
+                  >
+                    {value}
+                  </td>
+                </tr>
+              ))}
             </tbody>
           </table>
 
-          {obra.descricao && (
+          {descricao && (
             <div
               style={{
                 fontFamily: 'var(--sans)',
@@ -373,12 +383,12 @@ export default function Obra() {
                 marginBottom: '40px',
               }}
             >
-              {obra.descricao}
+              {descricao}
             </div>
           )}
 
           <BtnBlack
-            label="Consultar disponibilidade →"
+            label={t('obra.consultar')}
             onClick={() => setModalAberto(true)}
           />
         </div>
@@ -402,7 +412,7 @@ export default function Obra() {
               marginBottom: '10px',
             }}
           >
-            Continuar explorando
+            {t('obra.outrasKicker')}
           </div>
           <div
             style={{
@@ -412,7 +422,7 @@ export default function Obra() {
               marginBottom: '36px',
             }}
           >
-            Outras obras
+            {t('obra.outrasTitulo')}
           </div>
           <div
             style={{

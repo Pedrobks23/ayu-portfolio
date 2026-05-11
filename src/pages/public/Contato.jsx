@@ -4,12 +4,14 @@ import { useObras } from '@/context/ObrasContext';
 import { useConfiguracoes } from '@/hooks/useConfiguracoes';
 import Footer from '@/components/public/Footer';
 import { BtnBlack } from '@/components/public/ui';
+import { useT } from '@/i18n/useT';
 
 export default function Contato() {
   const [searchParams] = useSearchParams();
   const { getObra } = useObras();
   const { config } = useConfiguracoes();
   const [visible, setVisible] = useState(false);
+  const { t } = useT();
 
   const obraSlug = searchParams.get('obra');
   const obraPreset = obraSlug ? getObra(obraSlug) : null;
@@ -27,8 +29,8 @@ export default function Contato() {
   }, [obraPreset?.titulo]);
 
   useEffect(() => {
-    const t = setTimeout(() => setVisible(true), 10);
-    return () => clearTimeout(t);
+    const tId = setTimeout(() => setVisible(true), 10);
+    return () => clearTimeout(tId);
   }, []);
 
   function set(key, value) {
@@ -95,7 +97,7 @@ export default function Contato() {
                 marginBottom: '12px',
               }}
             >
-              Fale conosco
+              {t('contato.kicker')}
             </div>
             <h1
               style={{
@@ -105,7 +107,7 @@ export default function Contato() {
                 marginBottom: '40px',
               }}
             >
-              Contato
+              {t('contato.titulo')}
             </h1>
 
             {sent ? (
@@ -118,7 +120,7 @@ export default function Contato() {
                     marginBottom: '16px',
                   }}
                 >
-                  Mensagem enviada
+                  {t('contato.enviada')}
                 </div>
                 <div
                   style={{
@@ -128,7 +130,7 @@ export default function Contato() {
                     letterSpacing: '0.05em',
                   }}
                 >
-                  Retornaremos em breve.
+                  {t('contato.retornaremos')}
                 </div>
               </div>
             ) : (
@@ -137,27 +139,27 @@ export default function Contato() {
                 style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}
               >
                 <div>
-                  <label style={labelStyle} htmlFor="nome">Nome</label>
+                  <label style={labelStyle} htmlFor="nome">{t('contato.labelNome')}</label>
                   <input id="nome" type="text" required value={form.nome}
                     onChange={e => set('nome', e.target.value)} style={inputStyle} />
                 </div>
                 <div>
-                  <label style={labelStyle} htmlFor="email">E-mail</label>
+                  <label style={labelStyle} htmlFor="email">{t('contato.labelEmail')}</label>
                   <input id="email" type="email" required value={form.email}
                     onChange={e => set('email', e.target.value)} style={inputStyle} />
                 </div>
                 <div>
-                  <label style={labelStyle} htmlFor="obra">Obra de interesse (opcional)</label>
+                  <label style={labelStyle} htmlFor="obra">{t('contato.labelObra')}</label>
                   <input id="obra" type="text" value={form.obra}
                     onChange={e => set('obra', e.target.value)} style={inputStyle} />
                 </div>
                 <div>
-                  <label style={labelStyle} htmlFor="mensagem">Mensagem</label>
+                  <label style={labelStyle} htmlFor="mensagem">{t('contato.labelMensagem')}</label>
                   <textarea id="mensagem" rows={5} value={form.mensagem}
                     onChange={e => set('mensagem', e.target.value)}
                     style={{ ...inputStyle, resize: 'none' }} />
                 </div>
-                <BtnBlack label="Enviar mensagem →" type="submit" style={{ marginTop: '8px' }} />
+                <BtnBlack label={t('contato.enviar')} type="submit" style={{ marginTop: '8px' }} />
               </form>
             )}
           </div>
@@ -175,7 +177,7 @@ export default function Contato() {
                   marginBottom: '16px',
                 }}
               >
-                WhatsApp
+                {t('contato.labelWhatsApp')}
               </div>
               <a
                 href={`https://wa.me/${contato.whatsapp}`}
@@ -189,7 +191,7 @@ export default function Contato() {
                   textDecoration: 'none',
                 }}
               >
-                Enviar mensagem →
+                {t('contato.abrirWhatsApp')}
               </a>
             </div>
 
@@ -204,7 +206,7 @@ export default function Contato() {
                   marginBottom: '16px',
                 }}
               >
-                E-mail
+                {t('contato.labelEmailContato')}
               </div>
               <a
                 href={`mailto:${emailContato}`}
@@ -231,7 +233,7 @@ export default function Contato() {
                   marginBottom: '16px',
                 }}
               >
-                Instagram
+                {t('contato.labelInstagram')}
               </div>
               <a
                 href={instagramUrl}
@@ -260,8 +262,7 @@ export default function Contato() {
                 color: 'var(--mid)',
               }}
             >
-              Respondemos a todas as consultas em até 3 dias úteis. Para questões sobre
-              disponibilidade de obras, informe o título da obra no campo correspondente.
+              {t('contato.respostaInfo')}
             </div>
           </div>
         </div>

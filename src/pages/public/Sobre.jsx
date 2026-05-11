@@ -4,18 +4,23 @@ import FadeImg from '@/components/public/FadeImg';
 import Footer from '@/components/public/Footer';
 import { HoverUnderlineBtn } from '@/components/public/ui';
 import { useConfiguracoes } from '@/hooks/useConfiguracoes';
+import { useT } from '@/i18n/useT';
+import { useLang } from '@/context/LanguageContext';
+import { getLocalized } from '@/i18n/getLocalized';
 
 export default function Sobre() {
   const navigate = useNavigate();
   const { config } = useConfiguracoes();
   const [visible, setVisible] = useState(false);
+  const { t } = useT();
+  const { lang } = useLang();
 
   useEffect(() => {
-    const t = setTimeout(() => setVisible(true), 10);
-    return () => clearTimeout(t);
+    const tId = setTimeout(() => setVisible(true), 10);
+    return () => clearTimeout(tId);
   }, []);
 
-  const bio = config?.bio || '';
+  const bio = getLocalized(config, 'bio', lang) || '';
 
   return (
     <div
@@ -69,7 +74,7 @@ export default function Sobre() {
                 marginBottom: '12px',
               }}
             >
-              A artista
+              {t('sobre.kicker')}
             </div>
             <h1
               style={{
@@ -96,8 +101,8 @@ export default function Sobre() {
             </div>
 
             <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
-              <HoverUnderlineBtn label="Contato →" onClick={() => navigate('/contato')} />
-              <HoverUnderlineBtn label="Catálogo →" onClick={() => navigate('/catalogo')} />
+              <HoverUnderlineBtn label={t('sobre.btnContato')} onClick={() => navigate('/contato')} />
+              <HoverUnderlineBtn label={t('sobre.btnCatalogo')} onClick={() => navigate('/catalogo')} />
             </div>
           </div>
         </div>

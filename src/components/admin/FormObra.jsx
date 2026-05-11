@@ -23,6 +23,10 @@ const estadoVazio = {
   visivel: true,
   destaque: false,
   ordem: 0,
+  tituloEn: '',
+  tecnicaEn: '',
+  colecaoEn: '',
+  descricaoEn: '',
 };
 
 function makeId() {
@@ -37,7 +41,13 @@ export default function FormObra({ obraExistente }) {
   const [form, setForm] = useState(() => {
     if (!obraExistente) return estadoVazio;
     const { imagens: _, slug: __, criadoEm: ___, atualizadoEm: ____, ...rest } = obraExistente;
-    return rest;
+    return {
+      tituloEn: '',
+      tecnicaEn: '',
+      colecaoEn: '',
+      descricaoEn: '',
+      ...rest,
+    };
   });
 
   const [slugPreview, setSlugPreview] = useState(obraExistente?.slug || '');
@@ -345,9 +355,84 @@ export default function FormObra({ obraExistente }) {
         </div>
       </div>
 
+      {/* Bloco tradução EN */}
+      <details
+        style={{
+          marginTop: '40px',
+          border: '1px solid rgba(197,192,186,0.5)',
+          background: 'rgba(197,192,186,0.06)',
+        }}
+      >
+        <summary
+          style={{
+            padding: '16px 20px',
+            fontFamily: 'var(--sans)',
+            fontSize: '0.62rem',
+            letterSpacing: '0.18em',
+            textTransform: 'uppercase',
+            color: 'var(--mid)',
+            cursor: 'pointer',
+            userSelect: 'none',
+          }}
+        >
+          Tradução para inglês (opcional)
+        </summary>
+        <div style={{ padding: '0 20px 24px' }}>
+          <div
+            style={{
+              fontFamily: 'var(--sans)',
+              fontSize: '0.68rem',
+              color: 'var(--mid)',
+              lineHeight: 1.6,
+              marginBottom: '24px',
+              marginTop: '12px',
+            }}
+          >
+            Deixe em branco pra usar o texto em português. Recomendado preencher pelo menos bio e descrições.
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+            <div>
+              <label style={labelStyle} htmlFor="tituloEn">Título (EN)</label>
+              <input id="tituloEn" type="text"
+                value={form.tituloEn || ''}
+                onChange={e => set('tituloEn', e.target.value)}
+                style={inputStyle}
+                placeholder="when it corrodes"
+              />
+            </div>
+            <div>
+              <label style={labelStyle} htmlFor="tecnicaEn">Técnica (EN)</label>
+              <input id="tecnicaEn" type="text"
+                value={form.tecnicaEn || ''}
+                onChange={e => set('tecnicaEn', e.target.value)}
+                style={inputStyle}
+                placeholder="Glazed ceramics"
+              />
+            </div>
+            <div>
+              <label style={labelStyle} htmlFor="colecaoEn">Coleção (EN)</label>
+              <input id="colecaoEn" type="text"
+                value={form.colecaoEn || ''}
+                onChange={e => set('colecaoEn', e.target.value)}
+                style={inputStyle}
+                placeholder="8,092 days at home"
+              />
+            </div>
+            <div>
+              <label style={labelStyle} htmlFor="descricaoEn">Descrição (EN)</label>
+              <textarea id="descricaoEn" rows={4}
+                value={form.descricaoEn || ''}
+                onChange={e => set('descricaoEn', e.target.value)}
+                style={{ ...inputStyle, resize: 'vertical' }}
+                placeholder="Free text about the work..."
+              />
+            </div>
+          </div>
+        </div>
+      </details>
+
       {/* Bloco de imagens */}
       <div style={{ marginTop: '40px' }}>
-        {/* Caixa de orientação */}
         <div
           style={{
             background: 'rgba(197,192,186,0.18)',
@@ -411,7 +496,6 @@ export default function FormObra({ obraExistente }) {
           />
         </div>
 
-        {/* Lista de imagens */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
           {imagens.map((img, idx) => (
             <div
@@ -425,7 +509,6 @@ export default function FormObra({ obraExistente }) {
                 border: `1px solid ${img.erro ? 'rgba(138,48,48,0.2)' : 'rgba(197,192,186,0.4)'}`,
               }}
             >
-              {/* Thumb */}
               <div
                 style={{
                   width: '52px',
@@ -460,7 +543,6 @@ export default function FormObra({ obraExistente }) {
                 )}
               </div>
 
-              {/* Info */}
               <div style={{ flex: 1, minWidth: 0 }}>
                 {idx === 0 && !img.erro && (
                   <span
@@ -505,7 +587,6 @@ export default function FormObra({ obraExistente }) {
                 )}
               </div>
 
-              {/* Controles */}
               <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 0 }}>
                 <button type="button" onClick={() => moverImagem(idx, -1)} disabled={idx === 0}
                   title="Mover para cima"
@@ -528,7 +609,6 @@ export default function FormObra({ obraExistente }) {
         </div>
       </div>
 
-      {/* Erro */}
       {erro && (
         <div
           role="alert"
@@ -546,7 +626,6 @@ export default function FormObra({ obraExistente }) {
         </div>
       )}
 
-      {/* Botões */}
       <div
         style={{
           display: 'flex',

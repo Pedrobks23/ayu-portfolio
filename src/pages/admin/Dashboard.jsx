@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useObras } from '@/context/ObrasContext';
+import { useParticipacoes } from '@/hooks/useParticipacoes';
 import AdminLayout from '@/components/admin/AdminLayout';
 import { urlOtimizada } from '@/lib/cloudinary';
 import { doc, updateDoc } from 'firebase/firestore';
@@ -70,6 +71,69 @@ function AnalyticsCard() {
       >
         Ver analytics ↗
       </a>
+    </div>
+  );
+}
+
+function ParticipationsCard({ count }) {
+  const navigate = useNavigate();
+  return (
+    <div
+      style={{
+        marginBottom: '32px',
+        padding: '20px 24px',
+        background: 'rgba(197,192,186,0.12)',
+        border: '1px solid rgba(197,192,186,0.4)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        flexWrap: 'wrap',
+        gap: '16px',
+      }}
+    >
+      <div>
+        <div
+          style={{
+            fontFamily: 'var(--sans)',
+            fontSize: '0.58rem',
+            letterSpacing: '0.2em',
+            textTransform: 'uppercase',
+            color: 'var(--mid)',
+            marginBottom: '6px',
+          }}
+        >
+          Participações cadastradas
+        </div>
+        <div
+          style={{
+            fontFamily: 'var(--serif)',
+            fontSize: '1.6rem',
+            fontWeight: 300,
+            color: 'var(--text)',
+            lineHeight: 1,
+          }}
+        >
+          {count}
+        </div>
+      </div>
+      <button
+        onClick={() => navigate('/painel-ayume/participacoes')}
+        style={{
+          fontFamily: 'var(--sans)',
+          fontSize: '0.6rem',
+          letterSpacing: '0.18em',
+          textTransform: 'uppercase',
+          color: 'var(--text)',
+          border: '1px solid rgba(26,26,26,0.3)',
+          padding: '10px 20px',
+          background: 'none',
+          cursor: 'pointer',
+          whiteSpace: 'nowrap',
+          flexShrink: 0,
+        }}
+      >
+        Gerir participações →
+      </button>
     </div>
   );
 }
@@ -156,7 +220,6 @@ function UsageBar({ obras }) {
         ))}
       </div>
 
-      {/* Barra de progresso imagens */}
       <div>
         <div
           style={{
@@ -202,6 +265,7 @@ const BADGE = {
 export default function Dashboard() {
   const navigate = useNavigate();
   const { obras, loading, deletarObra } = useObras();
+  const { participacoes } = useParticipacoes();
   const [busca, setBusca] = useState('');
   const [tipoFiltro, setTipoFiltro] = useState('TODAS');
   const [deletando, setDeletando] = useState(null);
@@ -306,6 +370,9 @@ export default function Dashboard() {
       {/* Monitor de uso */}
       <UsageBar obras={obras} />
 
+      {/* Participações */}
+      <ParticipationsCard count={participacoes.length} />
+
       {/* Filtros */}
       <div
         style={{
@@ -387,7 +454,6 @@ export default function Dashboard() {
                 const capa = obra.imagens?.[0];
                 return (
                   <tr key={obra.slug} style={{ borderBottom: '1px solid rgba(26,26,26,0.08)' }}>
-                    {/* Thumbnail */}
                     <td style={{ padding: '16px 16px 16px 0', width: '60px' }}>
                       <div
                         style={{

@@ -1,0 +1,69 @@
+{
+  "nav": {
+    "inicio": "Home",
+    "catalogo": "Catalogue",
+    "sobre": "About",
+    "contato": "Contact"
+  },
+  "home": {
+    "ctaExplore": "Explore works",
+    "ctaPortfolio": "View visual portfolio",
+    "secaoParticipacoesKicker": "Upcoming",
+    "secaoParticipacoesTitulo": "Exhibitions",
+    "secaoDestaquesKicker": "Current selection",
+    "secaoDestaquesTitulo": "Featured works",
+    "verCatalogo": "View full catalogue →",
+    "semParticipacoes": "No exhibitions announced at this time.",
+    "semDestaques": "No featured works at this time."
+  },
+  "catalogo": {
+    "kicker": "Full collection",
+    "titulo": "Catalogue",
+    "filtroTodas": "All",
+    "filtroPintura": "Painting",
+    "filtroEscultura": "Sculpture",
+    "todasColecoes": "All collections",
+    "semObras": "No works found."
+  },
+  "obra": {
+    "voltar": "← Catalogue",
+    "colecao": "Collection",
+    "ano": "Year",
+    "tecnica": "Medium",
+    "dimensoes": "Dimensions",
+    "disponibilidade": "Availability",
+    "consultar": "Check availability →",
+    "outrasKicker": "Keep exploring",
+    "outrasTitulo": "Other works",
+    "modalKicker": "Check availability",
+    "whatsapp": "WhatsApp",
+    "email": "E-mail",
+    "disp_Disponivel": "Available",
+    "disp_SobConsulta": "On request",
+    "disp_Indisponivel": "Unavailable"
+  },
+  "sobre": {
+    "kicker": "The artist",
+    "btnContato": "Contact →",
+    "btnCatalogo": "Catalogue →"
+  },
+  "contato": {
+    "kicker": "Get in touch",
+    "titulo": "Contact",
+    "labelNome": "Name",
+    "labelEmail": "E-mail",
+    "labelObra": "Work of interest (optional)",
+    "labelMensagem": "Message",
+    "enviar": "Send message →",
+    "enviada": "Message sent",
+    "retornaremos": "We'll get back to you soon.",
+    "labelWhatsApp": "WhatsApp",
+    "labelEmailContato": "E-mail",
+    "labelInstagram": "Instagram",
+    "respostaInfo": "We respond to all enquiries within 3 business days. For questions about artwork availability, please mention the title in the corresponding field.",
+    "abrirWhatsApp": "Send message →"
+  },
+  "footer": {
+    "direitos": "© 2025 — All rights reserved"
+  }
+}

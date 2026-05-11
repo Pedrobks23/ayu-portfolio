@@ -3,6 +3,7 @@ import { useObras } from '@/context/ObrasContext';
 import ObraCard from '@/components/public/ObraCard';
 import FiltroCatalogo from '@/components/public/FiltroCatalogo';
 import Footer from '@/components/public/Footer';
+import { useT } from '@/i18n/useT';
 
 export default function Catalogo() {
   const { obras } = useObras();
@@ -10,10 +11,11 @@ export default function Catalogo() {
   const [colecao, setColecao] = useState('Todas');
   const [anyHovered, setAnyHovered] = useState(false);
   const [visible, setVisible] = useState(false);
+  const { t } = useT();
 
   useEffect(() => {
-    const t = setTimeout(() => setVisible(true), 10);
-    return () => clearTimeout(t);
+    const tId = setTimeout(() => setVisible(true), 10);
+    return () => clearTimeout(tId);
   }, []);
 
   const filtered = obras
@@ -49,7 +51,7 @@ export default function Catalogo() {
             marginBottom: '12px',
           }}
         >
-          Coleção completa
+          {t('catalogo.kicker')}
         </div>
         <div
           style={{
@@ -59,7 +61,7 @@ export default function Catalogo() {
             marginBottom: '40px',
           }}
         >
-          Catálogo
+          {t('catalogo.titulo')}
         </div>
         <FiltroCatalogo
           obras={obras}
@@ -75,7 +77,7 @@ export default function Catalogo() {
           <div
             style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
+              gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))',
               gap: '32px 24px',
             }}
           >
@@ -98,7 +100,7 @@ export default function Catalogo() {
               color: 'var(--mid)',
             }}
           >
-            Nenhuma obra encontrada.
+            {t('catalogo.semObras')}
           </div>
         )}
       </section>

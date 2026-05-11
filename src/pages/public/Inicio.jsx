@@ -4,18 +4,21 @@ import { useConfiguracoes } from '@/hooks/useConfiguracoes';
 import HeroSection from '@/components/public/HeroSection';
 import ObraCard from '@/components/public/ObraCard';
 import Footer from '@/components/public/Footer';
+import SecaoParticipacoes from '@/components/public/SecaoParticipacoes';
 import { HoverUnderlineBtn } from '@/components/public/ui';
 import { useNavigate } from 'react-router-dom';
+import { useT } from '@/i18n/useT';
 
 export default function Inicio() {
   const { obras } = useObras();
   const { config } = useConfiguracoes();
   const navigate = useNavigate();
   const [visible, setVisible] = useState(false);
+  const { t } = useT();
 
   useEffect(() => {
-    const t = setTimeout(() => setVisible(true), 10);
-    return () => clearTimeout(t);
+    const tId = setTimeout(() => setVisible(true), 10);
+    return () => clearTimeout(tId);
   }, []);
 
   const destaques = obras
@@ -29,6 +32,9 @@ export default function Inicio() {
         heroImagem={config?.heroImagem}
         portfolioVisualUrl={config?.portfolioVisualUrl}
       />
+
+      {/* Participações */}
+      <SecaoParticipacoes />
 
       {/* Obras em destaque */}
       <section style={{ padding: 'clamp(64px,8vw,120px) clamp(24px,5vw,72px)' }}>
@@ -53,7 +59,7 @@ export default function Inicio() {
                 marginBottom: '10px',
               }}
             >
-              Seleção atual
+              {t('home.secaoDestaquesKicker')}
             </div>
             <div
               style={{
@@ -62,11 +68,11 @@ export default function Inicio() {
                 fontWeight: 300,
               }}
             >
-              Obras em destaque
+              {t('home.secaoDestaquesTitulo')}
             </div>
           </div>
           <HoverUnderlineBtn
-            label="Ver catálogo completo →"
+            label={t('home.verCatalogo')}
             onClick={() => navigate('/catalogo')}
           />
         </div>
@@ -94,7 +100,7 @@ export default function Inicio() {
               color: 'var(--mid)',
             }}
           >
-            Nenhuma obra em destaque no momento.
+            {t('home.semDestaques')}
           </div>
         )}
       </section>

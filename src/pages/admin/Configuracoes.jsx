@@ -18,6 +18,7 @@ export default function Configuracoes() {
     if (config && !form) {
       setForm({
         bio: config.bio || '',
+        bioEn: config.bioEn || '',
         portfolioVisualUrl: config.portfolioVisualUrl || '',
         contato: {
           email: config.contato?.email || '',
@@ -102,6 +103,16 @@ export default function Configuracoes() {
     display: 'block',
     marginBottom: '8px',
   };
+  const sectionTitle = {
+    fontFamily: 'var(--sans)',
+    fontSize: '0.65rem',
+    letterSpacing: '0.2em',
+    textTransform: 'uppercase',
+    color: 'var(--text)',
+    marginBottom: '24px',
+    paddingBottom: '12px',
+    borderBottom: '1px solid rgba(26,26,26,0.1)',
+  };
 
   return (
     <AdminLayout>
@@ -153,20 +164,7 @@ export default function Configuracoes() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '40px' }}>
             {/* Hero */}
             <section>
-              <div
-                style={{
-                  fontFamily: 'var(--sans)',
-                  fontSize: '0.65rem',
-                  letterSpacing: '0.2em',
-                  textTransform: 'uppercase',
-                  color: 'var(--text)',
-                  marginBottom: '24px',
-                  paddingBottom: '12px',
-                  borderBottom: '1px solid rgba(26,26,26,0.1)',
-                }}
-              >
-                Imagem hero (Home)
-              </div>
+              <div style={sectionTitle}>Imagem hero (Home)</div>
 
               {form.heroImagem?.url && (
                 <div
@@ -217,20 +215,7 @@ export default function Configuracoes() {
 
             {/* Bio */}
             <section>
-              <div
-                style={{
-                  fontFamily: 'var(--sans)',
-                  fontSize: '0.65rem',
-                  letterSpacing: '0.2em',
-                  textTransform: 'uppercase',
-                  color: 'var(--text)',
-                  marginBottom: '24px',
-                  paddingBottom: '12px',
-                  borderBottom: '1px solid rgba(26,26,26,0.1)',
-                }}
-              >
-                Bio
-              </div>
+              <div style={sectionTitle}>Bio</div>
               <label style={labelStyle} htmlFor="bio">Texto da página Sobre</label>
               <textarea
                 id="bio"
@@ -240,6 +225,27 @@ export default function Configuracoes() {
                 style={{ ...inputStyle, resize: 'vertical' }}
                 placeholder="Texto sobre a artista..."
               />
+
+              {/* Bio EN */}
+              <details style={{ marginTop: '24px', border: '1px solid rgba(197,192,186,0.5)', background: 'rgba(197,192,186,0.06)' }}>
+                <summary style={{ padding: '12px 16px', fontFamily: 'var(--sans)', fontSize: '0.62rem', letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--mid)', cursor: 'pointer', userSelect: 'none' }}>
+                  Tradução para inglês (opcional)
+                </summary>
+                <div style={{ padding: '0 16px 20px' }}>
+                  <div style={{ fontFamily: 'var(--sans)', fontSize: '0.68rem', color: 'var(--mid)', lineHeight: 1.6, marginBottom: '16px', marginTop: '12px' }}>
+                    Deixe em branco pra usar o texto em português. Recomendado preencher pelo menos bio e descrições.
+                  </div>
+                  <label style={labelStyle} htmlFor="bioEn">Bio (EN)</label>
+                  <textarea
+                    id="bioEn"
+                    rows={6}
+                    value={form.bioEn}
+                    onChange={e => setField('bioEn', e.target.value)}
+                    style={{ ...inputStyle, resize: 'vertical' }}
+                    placeholder="Text about the artist..."
+                  />
+                </div>
+              </details>
             </section>
 
             {/* URL portfólio */}
@@ -257,20 +263,7 @@ export default function Configuracoes() {
 
             {/* Contato */}
             <section>
-              <div
-                style={{
-                  fontFamily: 'var(--sans)',
-                  fontSize: '0.65rem',
-                  letterSpacing: '0.2em',
-                  textTransform: 'uppercase',
-                  color: 'var(--text)',
-                  marginBottom: '24px',
-                  paddingBottom: '12px',
-                  borderBottom: '1px solid rgba(26,26,26,0.1)',
-                }}
-              >
-                Contato
-              </div>
+              <div style={sectionTitle}>Contato</div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
                 <div>
                   <label style={labelStyle} htmlFor="email">E-mail</label>

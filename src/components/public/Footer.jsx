@@ -1,8 +1,10 @@
 import { useNavigate } from 'react-router-dom';
 import { IgButton } from '@/components/public/ui';
+import { useT } from '@/i18n/useT';
 
 export default function Footer() {
   const navigate = useNavigate();
+  const { t } = useT();
   return (
     <footer
       style={{
@@ -41,7 +43,7 @@ export default function Footer() {
         }}
       >
         <IgButton />
-        © 2025 — Todos os direitos reservados
+        {t('footer.direitos')}
       </div>
     </footer>
   );

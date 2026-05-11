@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Imagem from '@/components/public/Imagem';
+import { useT } from '@/i18n/useT';
 
 export default function HeroSection({ heroImagem, portfolioVisualUrl }) {
   const [btnHovered, setBtnHovered]   = useState(false);
   const [ghostHovered, setGhostHovered] = useState(false);
   const navigate = useNavigate();
+  const { t } = useT();
 
   return (
     <div
@@ -44,8 +46,8 @@ export default function HeroSection({ heroImagem, portfolioVisualUrl }) {
       <div
         style={{
           position: 'absolute',
-          bottom: '10vh',
-          left: 'clamp(32px, 6vw, 96px)',
+          bottom: 'clamp(4vh, 6vh, 10vh)',
+          left: 'clamp(20px, 5vw, 96px)',
           display: 'flex',
           flexDirection: 'column',
           gap: '14px',
@@ -56,14 +58,14 @@ export default function HeroSection({ heroImagem, portfolioVisualUrl }) {
           onMouseEnter={() => setBtnHovered(true)}
           onMouseLeave={() => setBtnHovered(false)}
           onClick={() => navigate('/catalogo')}
-          aria-label="Explorar obras — ir para o catálogo"
+          aria-label={t('home.ctaExplore')}
           style={{
             position: 'relative',
             overflow: 'hidden',
             border: '1px solid rgba(255,255,255,0.65)',
             background: 'transparent',
             color: 'white',
-            padding: '15px 36px',
+            padding: 'clamp(12px,1.5vw,15px) clamp(22px,3vw,36px)',
             fontFamily: 'var(--sans)',
             fontSize: '0.62rem',
             letterSpacing: '0.22em',
@@ -83,7 +85,7 @@ export default function HeroSection({ heroImagem, portfolioVisualUrl }) {
               transition: 'left 0.4s ease-out',
             }}
           />
-          <span style={{ position: 'relative', zIndex: 1 }}>Explorar obras</span>
+          <span style={{ position: 'relative', zIndex: 1 }}>{t('home.ctaExplore')}</span>
           <span
             style={{
               position: 'relative',
@@ -109,7 +111,7 @@ export default function HeroSection({ heroImagem, portfolioVisualUrl }) {
               border: '1px solid rgba(255,255,255,0.3)',
               background: ghostHovered ? 'rgba(255,255,255,0.08)' : 'transparent',
               color: 'rgba(255,255,255,0.75)',
-              padding: '12px 28px',
+              padding: 'clamp(10px,1.2vw,12px) clamp(20px,2.5vw,28px)',
               fontFamily: 'var(--sans)',
               fontSize: '0.58rem',
               letterSpacing: '0.2em',
@@ -120,7 +122,7 @@ export default function HeroSection({ heroImagem, portfolioVisualUrl }) {
               transition: 'background 0.3s ease-out, color 0.3s ease-out',
             }}
           >
-            Acessar portfólio visual ↗
+            {t('home.ctaPortfolio')} ↗
           </a>
         )}
       </div>

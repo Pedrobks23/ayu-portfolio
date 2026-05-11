@@ -1,0 +1,69 @@
+{
+  "nav": {
+    "inicio": "Início",
+    "catalogo": "Catálogo",
+    "sobre": "Sobre",
+    "contato": "Contato"
+  },
+  "home": {
+    "ctaExplore": "Explorar obras",
+    "ctaPortfolio": "Acessar portfólio visual",
+    "secaoParticipacoesKicker": "Onde estarei",
+    "secaoParticipacoesTitulo": "Participações",
+    "secaoDestaquesKicker": "Seleção atual",
+    "secaoDestaquesTitulo": "Obras em destaque",
+    "verCatalogo": "Ver catálogo completo →",
+    "semParticipacoes": "Nenhuma participação anunciada no momento.",
+    "semDestaques": "Nenhuma obra em destaque no momento."
+  },
+  "catalogo": {
+    "kicker": "Coleção completa",
+    "titulo": "Catálogo",
+    "filtroTodas": "Todas",
+    "filtroPintura": "Pintura",
+    "filtroEscultura": "Escultura",
+    "todasColecoes": "Todas as coleções",
+    "semObras": "Nenhuma obra encontrada."
+  },
+  "obra": {
+    "voltar": "← Catálogo",
+    "colecao": "Coleção",
+    "ano": "Ano",
+    "tecnica": "Técnica",
+    "dimensoes": "Dimensões",
+    "disponibilidade": "Disponibilidade",
+    "consultar": "Consultar disponibilidade →",
+    "outrasKicker": "Continuar explorando",
+    "outrasTitulo": "Outras obras",
+    "modalKicker": "Consultar disponibilidade",
+    "whatsapp": "WhatsApp",
+    "email": "E-mail",
+    "disp_Disponivel": "Disponível",
+    "disp_SobConsulta": "Sob consulta",
+    "disp_Indisponivel": "Indisponível"
+  },
+  "sobre": {
+    "kicker": "A artista",
+    "btnContato": "Contato →",
+    "btnCatalogo": "Catálogo →"
+  },
+  "contato": {
+    "kicker": "Fale conosco",
+    "titulo": "Contato",
+    "labelNome": "Nome",
+    "labelEmail": "E-mail",
+    "labelObra": "Obra de interesse (opcional)",
+    "labelMensagem": "Mensagem",
+    "enviar": "Enviar mensagem →",
+    "enviada": "Mensagem enviada",
+    "retornaremos": "Retornaremos em breve.",
+    "labelWhatsApp": "WhatsApp",
+    "labelEmailContato": "E-mail",
+    "labelInstagram": "Instagram",
+    "respostaInfo": "Respondemos a todas as consultas em até 3 dias úteis. Para questões sobre disponibilidade de obras, informe o título da obra no campo correspondente.",
+    "abrirWhatsApp": "Enviar mensagem →"
+  },
+  "footer": {
+    "direitos": "© 2025 — Todos os direitos reservados"
+  }
+}
