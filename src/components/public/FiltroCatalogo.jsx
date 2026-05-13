@@ -1,4 +1,8 @@
-const CATEGORIAS = ['Todas', 'Pintura', 'Escultura'];
+const CATEGORIAS = [
+  { value: 'Todas', label: 'All' },
+  { value: 'Pintura', label: 'Painting' },
+  { value: 'Escultura', label: 'Sculpture' },
+];
 
 const pillBase = {
   fontFamily: 'var(--sans)',
@@ -43,13 +47,13 @@ export default function FiltroCatalogo({ obras, categoria, colecao, onCategoriaC
         role="group"
         aria-label="Filtrar por categoria"
       >
-        {CATEGORIAS.map(c => (
+        {CATEGORIAS.map(({ value, label }) => (
           <Pill
-            key={c}
-            label={c}
-            active={categoria === c}
+            key={value}
+            label={label}
+            active={categoria === value}
             onClick={() => {
-              onCategoriaChange(c);
+              onCategoriaChange(value);
               onColecaoChange('Todas');
             }}
           />
