@@ -1,7 +1,9 @@
+import { useT } from '@/i18n/useT';
+
 const CATEGORIAS = [
-  { value: 'Todas', label: 'All' },
-  { value: 'Pintura', label: 'Painting' },
-  { value: 'Escultura', label: 'Sculpture' },
+  { value: 'Todas', labelKey: 'catalogo.filtroTodas' },
+  { value: 'Pintura', labelKey: 'catalogo.filtroPintura' },
+  { value: 'Escultura', labelKey: 'catalogo.filtroEscultura' },
 ];
 
 const pillBase = {
@@ -34,6 +36,8 @@ function Pill({ label, active, onClick, small }) {
 }
 
 export default function FiltroCatalogo({ obras, categoria, colecao, onCategoriaChange, onColecaoChange }) {
+  const { t } = useT();
+
   const colecoesDeCategoria =
     categoria !== 'Todas'
       ? [...new Set(obras.filter(o => o.tipo === categoria).map(o => o.colecao).filter(Boolean))]
@@ -47,10 +51,10 @@ export default function FiltroCatalogo({ obras, categoria, colecao, onCategoriaC
         role="group"
         aria-label="Filtrar por categoria"
       >
-        {CATEGORIAS.map(({ value, label }) => (
+        {CATEGORIAS.map(({ value, labelKey }) => (
           <Pill
             key={value}
-            label={label}
+            label={t(labelKey)}
             active={categoria === value}
             onClick={() => {
               onCategoriaChange(value);
@@ -67,7 +71,7 @@ export default function FiltroCatalogo({ obras, categoria, colecao, onCategoriaC
           role="group"
           aria-label="Filtrar por coleção"
         >
-          <Pill label="Todas as coleções" active={colecao === 'Todas'} onClick={() => onColecaoChange('Todas')} small />
+          <Pill label={t('catalogo.todasColecoes')} active={colecao === 'Todas'} onClick={() => onColecaoChange('Todas')} small />
           {colecoesDeCategoria.map(c => (
             <Pill key={c} label={c} active={colecao === c} onClick={() => onColecaoChange(c)} small />
           ))}
