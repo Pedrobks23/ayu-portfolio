@@ -22,7 +22,12 @@ async function heicParaJpeg(file) {
 export async function uploadImagem(rawFile) {
   let file = rawFile;
   if (isHeic(rawFile)) {
-    file = await heicParaJpeg(rawFile);
+    try {
+      file = await heicParaJpeg(rawFile);
+    } catch {
+      // heic2any não suporta esse variant de HEIC — envia direto, Cloudinary aceita HEIC nativamente
+      file = rawFile;
+    }
   }
   const fd = new FormData();
   fd.append('file', file);
