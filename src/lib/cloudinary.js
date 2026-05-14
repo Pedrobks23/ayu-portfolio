@@ -100,14 +100,14 @@ export async function uploadImagem(rawFile) {
     throw new Error(err.error?.message || 'Falha no upload');
   }
   const data = await r.json();
-  return { publicId: data.public_id, url: data.secure_url, bytes: data.bytes ?? 0 };
+  return { publicId: data.public_id, url: data.secure_url, bytes: data.bytes ?? 0, width: data.width ?? 0, height: data.height ?? 0 };
 }
 
 const TAMANHOS = {
-  thumb: 'f_auto,q_auto:eco,w_400,h_500,c_fill,g_auto',    // 4:5, smart crop
-  card:  'f_auto,q_auto:good,w_600,h_750,c_fill,g_auto',   // 4:5, smart crop
-  hero:  'f_auto,q_auto:good,w_1920',                       // sem crop, largura total
-  full:  'f_auto,q_auto:best,w_1600',                       // sem crop, alta qualidade
+  thumb: 'f_auto,q_auto:eco,w_400,c_limit',
+  card:  'f_auto,q_auto:good,w_800,c_limit',
+  hero:  'f_auto,q_auto:good,w_1920',
+  full:  'f_auto,q_auto:best,w_1600',
 };
 
 export function urlOtimizada(publicId, tamanho = 'card') {

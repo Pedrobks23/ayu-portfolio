@@ -66,6 +66,8 @@ export default function FormObra({ obraExistente }) {
       publicId: img.publicId,
       url: img.url,
       bytes: img.bytes ?? 0,
+      width: img.width ?? 0,
+      height: img.height ?? 0,
       preview: img.url,
       uploading: false,
       erro: null,
@@ -135,12 +137,12 @@ export default function FormObra({ obraExistente }) {
               maxWidthOrHeight: 2400,
               useWebWorker: true,
             });
-        const { publicId, url, bytes } = await uploadImagem(arquivo);
+        const { publicId, url, bytes, width, height } = await uploadImagem(arquivo);
         URL.revokeObjectURL(item.preview);
         setImagens(prev =>
           prev.map(i =>
             i.id === item.id
-              ? { ...i, publicId, url, bytes, preview: url, uploading: false, _file: undefined }
+              ? { ...i, publicId, url, bytes, width, height, preview: url, uploading: false, _file: undefined }
               : i
           )
         );
@@ -195,7 +197,7 @@ export default function FormObra({ obraExistente }) {
 
     const imagensSalvas = imagens
       .filter(i => i.publicId && !i.erro)
-      .map((i, idx) => ({ publicId: i.publicId, url: i.url, bytes: i.bytes ?? 0, ordem: idx }));
+      .map((i, idx) => ({ publicId: i.publicId, url: i.url, bytes: i.bytes ?? 0, width: i.width ?? 0, height: i.height ?? 0, ordem: idx }));
 
     const dadosObra = { ...form, slug, imagens: imagensSalvas };
 
