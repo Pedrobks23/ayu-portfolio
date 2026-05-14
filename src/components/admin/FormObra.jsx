@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import imageCompression from 'browser-image-compression';
-import heic2any from 'heic2any';
 import { useObras } from '@/context/ObrasContext';
 import { uploadImagem, urlOtimizada } from '@/lib/cloudinary';
 import { slugify } from '@/lib/utils';
@@ -12,13 +11,13 @@ const MAX_IMAGENS = 5;
 const MAX_MB = 8;
 const FORMATOS = ['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'image/heif'];
 
-async function normalizar(file) {
-  if (file.type === 'image/heic' || file.type === 'image/heif' ||
-      file.name.toLowerCase().endsWith('.heic') || file.name.toLowerCase().endsWith('.heif')) {
-    const blob = await heic2any({ blob: file, toType: 'image/jpeg', quality: 0.92 });
-    return new File([blob], file.name.replace(/\.hei[cf]$/i, '.jpg'), { type: 'image/jpeg' });
-  }
-  return file;
+function isHeic(file) {
+  return (
+    file.type === 'image/heic' ||
+    file.type === 'image/heif' ||
+    file.name.toLowerCase().endsWith('.heic') ||
+    file.name.toLowerCase().endsWith('.heif')
+  );
 }
 
 const estadoVazio = {
@@ -129,13 +128,14 @@ export default function FormObra({ obraExistente }) {
 
     for (const item of novos) {
       try {
-        const normalizada = await normalizar(item._file);
-        const comprimida = await imageCompression(normalizada, {
-          maxSizeMB: 2,
-          maxWidthOrHeight: 2400,
-          useWebWorker: true,
-        });
-        const { publicId, url, bytes } = await uploadImagem(comprimida);
+        const arquivo = isHeic(item._file)
+          ? item._file
+          : await imageCompression(item._file, {
+              maxSizeMB: 2,
+              maxWidthOrHeight: 2400,
+              useWebWorker: true,
+            });
+        const { publicId, url, bytes } = await uploadImagem(arquivo);
         URL.revokeObjectURL(item.preview);
         setImagens(prev =>
           prev.map(i =>
