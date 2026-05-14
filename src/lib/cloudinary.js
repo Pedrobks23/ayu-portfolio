@@ -2,12 +2,22 @@ const CLOUD  = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
 const PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET;
 const FOLDER = import.meta.env.VITE_CLOUDINARY_FOLDER;
 
+function isHeic(file) {
+  return (
+    file.type === 'image/heic' ||
+    file.type === 'image/heif' ||
+    file.name.toLowerCase().endsWith('.heic') ||
+    file.name.toLowerCase().endsWith('.heif')
+  );
+}
+
 export async function uploadImagem(file) {
   const fd = new FormData();
   fd.append('file', file);
   fd.append('upload_preset', PRESET);
   fd.append('folder', FOLDER);
-  const r = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD}/image/upload`, {
+  const resourceType = isHeic(file) ? 'auto' : 'image';
+  const r = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD}/${resourceType}/upload`, {
     method: 'POST',
     body: fd,
   });
