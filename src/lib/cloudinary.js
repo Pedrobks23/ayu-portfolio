@@ -34,11 +34,12 @@ async function libheifParaJpeg(file) {
   const width = image.get_width();
   const height = image.get_height();
 
-  const canvas = document.createElement('canvas');
-  canvas.width = width;
-  canvas.height = height;
-  const ctx = canvas.getContext('2d');
-  const imageData = ctx.createImageData(width, height);
+  // Decodifica pixels via canvas temporário
+  const tempCanvas = document.createElement('canvas');
+  tempCanvas.width = width;
+  tempCanvas.height = height;
+  const tempCtx = tempCanvas.getContext('2d');
+  const imageData = tempCtx.createImageData(width, height);
 
   await new Promise((resolve, reject) => {
     image.display(imageData, result => {
@@ -47,7 +48,17 @@ async function libheifParaJpeg(file) {
     });
   });
 
-  ctx.putImageData(imageData, 0, 0);
+  tempCtx.putImageData(imageData, 0, 0);
+
+  // Composta sobre fundo branco — pixels transparentes (padding HEVC) viram branco, não preto
+  const canvas = document.createElement('canvas');
+  canvas.width = width;
+  canvas.height = height;
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, width, height);
+  ctx.drawImage(tempCanvas, 0, 0);
+
   return new Promise((resolve, reject) => {
     canvas.toBlob(
       blob => blob
@@ -93,8 +104,8 @@ export async function uploadImagem(rawFile) {
 }
 
 const TAMANHOS = {
-  thumb: 'f_auto,q_auto:eco,w_400,h_400,c_fill,g_auto',    // quadrado, smart crop
-  card:  'f_auto,q_auto:good,w_600,h_600,c_fill,g_auto',   // quadrado, smart crop
+  thumb: 'f_auto,q_auto:eco,w_400,h_500,c_fill,g_auto',    // 4:5, smart crop
+  card:  'f_auto,q_auto:good,w_600,h_750,c_fill,g_auto',   // 4:5, smart crop
   hero:  'f_auto,q_auto:good,w_1920',                       // sem crop, largura total
   full:  'f_auto,q_auto:best,w_1600',                       // sem crop, alta qualidade
 };
