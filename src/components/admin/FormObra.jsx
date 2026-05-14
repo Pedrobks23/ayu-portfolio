@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import imageCompression from 'browser-image-compression';
+import heic2any from 'heic2any';
 import { useObras } from '@/context/ObrasContext';
 import { uploadImagem, urlOtimizada } from '@/lib/cloudinary';
 import { slugify } from '@/lib/utils';
@@ -9,7 +10,16 @@ const DISPONIBILIDADES = ['Disponível', 'Sob consulta', 'Indisponível'];
 const TIPOS = ['Escultura', 'Pintura'];
 const MAX_IMAGENS = 5;
 const MAX_MB = 8;
-const FORMATOS = ['image/jpeg', 'image/png', 'image/webp'];
+const FORMATOS = ['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'image/heif'];
+
+async function normalizar(file) {
+  if (file.type === 'image/heic' || file.type === 'image/heif' ||
+      file.name.toLowerCase().endsWith('.heic') || file.name.toLowerCase().endsWith('.heif')) {
+    const blob = await heic2any({ blob: file, toType: 'image/jpeg', quality: 0.92 });
+    return new File([blob], file.name.replace(/\.hei[cf]$/i, '.jpg'), { type: 'image/jpeg' });
+  }
+  return file;
+}
 
 const estadoVazio = {
   titulo: '',
@@ -90,8 +100,9 @@ export default function FormObra({ obraExistente }) {
 
     const validos = [];
     for (const file of files.slice(0, slots)) {
-      if (!FORMATOS.includes(file.type)) {
-        setErro('Formato inválido. Use JPG, PNG ou WebP.');
+      const isHeic = file.name.toLowerCase().endsWith('.heic') || file.name.toLowerCase().endsWith('.heif');
+      if (!FORMATOS.includes(file.type) && !isHeic) {
+        setErro('Formato inválido. Use JPG, PNG, WebP ou HEIC.');
         continue;
       }
       if (file.size > MAX_MB * 1024 * 1024) {
@@ -118,7 +129,8 @@ export default function FormObra({ obraExistente }) {
 
     for (const item of novos) {
       try {
-        const comprimida = await imageCompression(item._file, {
+        const normalizada = await normalizar(item._file);
+        const comprimida = await imageCompression(normalizada, {
           maxSizeMB: 2,
           maxWidthOrHeight: 2400,
           useWebWorker: true,
@@ -449,7 +461,7 @@ export default function FormObra({ obraExistente }) {
           <ul style={{ margin: '8px 0 0', paddingLeft: '18px' }}>
             <li>Até {MAX_IMAGENS} imagens por obra</li>
             <li>Tamanho máximo: {MAX_MB}MB por imagem</li>
-            <li>Formatos aceitos: JPG, PNG, WebP</li>
+            <li>Formatos aceitos: JPG, PNG, WebP, HEIC</li>
             <li>A primeira imagem é a capa (use ↑↓ pra reordenar)</li>
             <li>Marque "Aparecer na página inicial" pra destacar a obra na Home</li>
             <li>Use boas fotos com fundo neutro pra melhor apresentação</li>
@@ -489,7 +501,7 @@ export default function FormObra({ obraExistente }) {
           <input
             ref={fileRef}
             type="file"
-            accept="image/jpeg,image/png,image/webp"
+            accept="image/jpeg,image/png,image/webp,image/heic,image/heif,.heic,.heif"
             multiple
             style={{ display: 'none' }}
             onChange={handleAddImagens}

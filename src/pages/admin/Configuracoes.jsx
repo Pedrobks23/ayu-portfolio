@@ -1,9 +1,19 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import imageCompression from 'browser-image-compression';
+import heic2any from 'heic2any';
 import AdminLayout from '@/components/admin/AdminLayout';
 import { useConfiguracoes } from '@/hooks/useConfiguracoes';
 import { uploadImagem, urlOtimizada } from '@/lib/cloudinary';
+
+async function normalizar(file) {
+  if (file.type === 'image/heic' || file.type === 'image/heif' ||
+      file.name.toLowerCase().endsWith('.heic') || file.name.toLowerCase().endsWith('.heif')) {
+    const blob = await heic2any({ blob: file, toType: 'image/jpeg', quality: 0.92 });
+    return new File([blob], file.name.replace(/\.hei[cf]$/i, '.jpg'), { type: 'image/jpeg' });
+  }
+  return file;
+}
 
 export default function Configuracoes() {
   const { config, loading, salvarConfig } = useConfiguracoes();
@@ -54,7 +64,8 @@ export default function Configuracoes() {
     if (!file) return;
     setUploadandoHero(true);
     try {
-      const comprimida = await imageCompression(file, {
+      const normalizada = await normalizar(file);
+      const comprimida = await imageCompression(normalizada, {
         maxSizeMB: 2,
         maxWidthOrHeight: 2400,
         useWebWorker: true,
@@ -207,7 +218,7 @@ export default function Configuracoes() {
               <input
                 ref={heroRef}
                 type="file"
-                accept="image/jpeg,image/png,image/webp"
+                accept="image/jpeg,image/png,image/webp,image/heic,image/heif,.heic,.heif"
                 style={{ display: 'none' }}
                 onChange={handleHeroUpload}
               />
