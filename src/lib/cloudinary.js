@@ -1,3 +1,5 @@
+import heic2any from 'heic2any';
+
 const CLOUD  = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
 const PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET;
 const FOLDER = import.meta.env.VITE_CLOUDINARY_FOLDER;
@@ -12,20 +14,9 @@ function isHeic(file) {
 }
 
 async function heicParaJpeg(file) {
-  const bitmap = await createImageBitmap(file);
-  const canvas = document.createElement('canvas');
-  canvas.width = bitmap.width;
-  canvas.height = bitmap.height;
-  canvas.getContext('2d').drawImage(bitmap, 0, 0);
-  return new Promise((resolve, reject) => {
-    canvas.toBlob(
-      blob => blob
-        ? resolve(new File([blob], file.name.replace(/\.hei[cf]$/i, '.jpg'), { type: 'image/jpeg' }))
-        : reject(new Error('Canvas blob falhou')),
-      'image/jpeg',
-      0.92
-    );
-  });
+  const blob = await heic2any({ blob: file, toType: 'image/jpeg', quality: 0.92 });
+  const result = Array.isArray(blob) ? blob[0] : blob;
+  return new File([result], file.name.replace(/\.hei[cf]$/i, '.jpg'), { type: 'image/jpeg' });
 }
 
 export async function uploadImagem(rawFile) {
