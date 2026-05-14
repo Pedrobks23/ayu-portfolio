@@ -237,11 +237,10 @@ export default function Obra() {
           <div
             style={{
               background: '#0D0D0D',
-              aspectRatio: '1/1',
+              aspectRatio: imagens[activeImg]?.width && imagens[activeImg]?.height
+                ? `${imagens[activeImg].width}/${imagens[activeImg].height}`
+                : '4/3',
               overflow: 'hidden',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
             }}
           >
             {imagens[activeImg] ? (
@@ -253,7 +252,7 @@ export default function Obra() {
                 style={{
                   width: '100%',
                   height: '100%',
-                  objectFit: 'contain',
+                  objectFit: 'cover',
                   display: 'block',
                 }}
               />
