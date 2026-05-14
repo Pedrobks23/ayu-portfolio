@@ -28,7 +28,7 @@ export default function ObraCard({ obra, onHoverChange }) {
           position: 'relative',
           overflow: 'hidden',
           background: '#0D0D0D',
-          aspectRatio: capa?.width && capa?.height ? `${capa.width}/${capa.height}` : '4/5',
+          aspectRatio: '1/1',
         }}
       >
         {capa ? (

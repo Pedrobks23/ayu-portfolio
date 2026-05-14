@@ -104,8 +104,8 @@ export async function uploadImagem(rawFile) {
 }
 
 const TAMANHOS = {
-  thumb: 'f_auto,q_auto:eco,w_400,c_limit',
-  card:  'f_auto,q_auto:good,w_800,c_limit',
+  thumb: 'f_auto,q_auto:eco,w_400,h_400,c_fill,g_auto',
+  card:  'f_auto,q_auto:good,w_600,h_600,c_fill,g_auto',
   hero:  'f_auto,q_auto:good,w_1920',
   full:  'f_auto,q_auto:best,w_1600',
 };
