@@ -11,17 +11,40 @@ function isHeic(file) {
   );
 }
 
-export async function uploadImagem(file) {
+async function heicParaJpeg(file) {
+  const bitmap = await createImageBitmap(file);
+  const canvas = document.createElement('canvas');
+  canvas.width = bitmap.width;
+  canvas.height = bitmap.height;
+  canvas.getContext('2d').drawImage(bitmap, 0, 0);
+  return new Promise((resolve, reject) => {
+    canvas.toBlob(
+      blob => blob
+        ? resolve(new File([blob], file.name.replace(/\.hei[cf]$/i, '.jpg'), { type: 'image/jpeg' }))
+        : reject(new Error('Canvas blob falhou')),
+      'image/jpeg',
+      0.92
+    );
+  });
+}
+
+export async function uploadImagem(rawFile) {
+  let file = rawFile;
+  if (isHeic(rawFile)) {
+    file = await heicParaJpeg(rawFile);
+  }
   const fd = new FormData();
   fd.append('file', file);
   fd.append('upload_preset', PRESET);
   fd.append('folder', FOLDER);
-  const resourceType = isHeic(file) ? 'auto' : 'image';
-  const r = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD}/${resourceType}/upload`, {
+  const r = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD}/image/upload`, {
     method: 'POST',
     body: fd,
   });
-  if (!r.ok) throw new Error('Falha no upload');
+  if (!r.ok) {
+    const err = await r.json().catch(() => ({}));
+    throw new Error(err.error?.message || 'Falha no upload');
+  }
   const data = await r.json();
   return { publicId: data.public_id, url: data.secure_url, bytes: data.bytes ?? 0 };
 }
