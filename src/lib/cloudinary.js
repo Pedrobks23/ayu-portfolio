@@ -14,20 +14,34 @@ function isHeic(file) {
 }
 
 async function heicParaJpeg(file) {
-  const blob = await heic2any({ blob: file, toType: 'image/jpeg', quality: 0.92 });
-  const result = Array.isArray(blob) ? blob[0] : blob;
-  return new File([result], file.name.replace(/\.hei[cf]$/i, '.jpg'), { type: 'image/jpeg' });
+  // Tenta heic2any (puro JS, funciona em qualquer plataforma)
+  try {
+    const blob = await heic2any({ blob: file, toType: 'image/jpeg', quality: 0.92 });
+    const result = Array.isArray(blob) ? blob[0] : blob;
+    return new File([result], file.name.replace(/\.hei[cf]$/i, '.jpg'), { type: 'image/jpeg' });
+  } catch {}
+
+  // Fallback: Canvas API — funciona no macOS/iOS que têm codec HEIC nativo
+  const bitmap = await createImageBitmap(file);
+  const canvas = document.createElement('canvas');
+  canvas.width = bitmap.width;
+  canvas.height = bitmap.height;
+  canvas.getContext('2d').drawImage(bitmap, 0, 0);
+  return new Promise((resolve, reject) => {
+    canvas.toBlob(
+      blob => blob
+        ? resolve(new File([blob], file.name.replace(/\.hei[cf]$/i, '.jpg'), { type: 'image/jpeg' }))
+        : reject(new Error('Não foi possível converter o arquivo HEIC.')),
+      'image/jpeg',
+      0.92
+    );
+  });
 }
 
 export async function uploadImagem(rawFile) {
   let file = rawFile;
   if (isHeic(rawFile)) {
-    try {
-      file = await heicParaJpeg(rawFile);
-    } catch {
-      // heic2any não suporta esse variant de HEIC — envia direto, Cloudinary aceita HEIC nativamente
-      file = rawFile;
-    }
+    file = await heicParaJpeg(rawFile);
   }
   const fd = new FormData();
   fd.append('file', file);
