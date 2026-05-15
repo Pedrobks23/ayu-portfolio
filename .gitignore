@@ -4,6 +4,7 @@ build
 .env
 .env.local
 .env.*.local
+.env.vercel
 .vercel
 *.log
 npm-debug.log*
@@ -20,6 +21,7 @@ Thumbs.db
 .claude/
 
 # Firebase Admin SDK — nunca commitar chaves privadas
+secrets/
 *firebase-adminsdk*.json
 serviceAccountKey.json
 

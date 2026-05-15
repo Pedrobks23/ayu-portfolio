@@ -8,7 +8,7 @@ import { dirname, join } from 'path';
 
 const require = createRequire(import.meta.url);
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const serviceAccount = require(join(__dirname, '..', 'portfolio-42492-firebase-adminsdk-fbsvc-91274296c2.json'));
+const serviceAccount = require(join(__dirname, '..', 'secrets', 'firebase-admin.json'));
 
 initializeApp({ credential: cert(serviceAccount) });
 const db = getFirestore();
@@ -175,6 +175,23 @@ async function seed() {
   // Configurações
   await db.collection('configuracoes').doc('site').set(configInicial);
   console.log('Configurações do site criadas.');
+
+  // Participação de exemplo
+  await db.collection('participacoes').doc('fargo-2026').set({
+    titulo: 'FARGO',
+    tituloEn: '',
+    local: 'Centro Cultural Oscar Niemeyer — GO',
+    localEn: '',
+    data: '16 e 17 de maio',
+    dataEn: 'May 16-17',
+    dataInicio: null,
+    dataFim: null,
+    visivel: true,
+    ordem: 1,
+    criadoEm: FieldValue.serverTimestamp(),
+    atualizadoEm: FieldValue.serverTimestamp(),
+  });
+  console.log('1 participação de exemplo criada.');
 
   console.log('Seed concluído!');
   process.exit(0);
