@@ -9,7 +9,6 @@ const CATEGORIAS = [
 const DISPONIBILIDADES = [
   { value: 'Todas', labelKey: 'catalogo.todasDisponibilidades' },
   { value: 'Disponível', labelKey: 'catalogo.filtroDisponivel' },
-  { value: 'Sob consulta', labelKey: 'catalogo.filtroSobConsulta' },
   { value: 'Indisponível', labelKey: 'catalogo.filtroIndisponivel' },
 ];
 
