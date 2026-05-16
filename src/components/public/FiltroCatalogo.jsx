@@ -6,6 +6,13 @@ const CATEGORIAS = [
   { value: 'Escultura', labelKey: 'catalogo.filtroEscultura' },
 ];
 
+const DISPONIBILIDADES = [
+  { value: 'Todas', labelKey: 'catalogo.todasDisponibilidades' },
+  { value: 'Disponível', labelKey: 'catalogo.filtroDisponivel' },
+  { value: 'Sob consulta', labelKey: 'catalogo.filtroSobConsulta' },
+  { value: 'Indisponível', labelKey: 'catalogo.filtroIndisponivel' },
+];
+
 const pillBase = {
   fontFamily: 'var(--sans)',
   letterSpacing: '0.15em',
@@ -35,7 +42,7 @@ function Pill({ label, active, onClick, small }) {
   );
 }
 
-export default function FiltroCatalogo({ obras, categoria, colecao, onCategoriaChange, onColecaoChange }) {
+export default function FiltroCatalogo({ obras, categoria, colecao, disponibilidade, onCategoriaChange, onColecaoChange, onDisponibilidadeChange }) {
   const { t } = useT();
 
   const colecoesDeCategoria =
@@ -77,6 +84,23 @@ export default function FiltroCatalogo({ obras, categoria, colecao, onCategoriaC
           ))}
         </div>
       )}
+
+      {/* Nível 3 — Disponibilidade */}
+      <div
+        style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', paddingLeft: '2px' }}
+        role="group"
+        aria-label="Filtrar por disponibilidade"
+      >
+        {DISPONIBILIDADES.map(({ value, labelKey }) => (
+          <Pill
+            key={value}
+            label={t(labelKey)}
+            active={disponibilidade === value}
+            onClick={() => onDisponibilidadeChange(value)}
+            small
+          />
+        ))}
+      </div>
     </div>
   );
 }

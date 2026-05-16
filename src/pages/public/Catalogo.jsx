@@ -9,6 +9,7 @@ export default function Catalogo() {
   const { obras } = useObras();
   const [categoria, setCategoria] = useState('Todas');
   const [colecao, setColecao] = useState('Todas');
+  const [disponibilidade, setDisponibilidade] = useState('Todas');
   const [anyHovered, setAnyHovered] = useState(false);
   const [visible, setVisible] = useState(false);
   const { t } = useT();
@@ -23,6 +24,7 @@ export default function Catalogo() {
       if (o.visivel === false) return false;
       if (categoria !== 'Todas' && o.tipo !== categoria) return false;
       if (colecao !== 'Todas' && o.colecao !== colecao) return false;
+      if (disponibilidade !== 'Todas' && o.disponibilidade !== disponibilidade) return false;
       return true;
     })
     .sort((a, b) => (a.ordem ?? 0) - (b.ordem ?? 0));
@@ -67,8 +69,10 @@ export default function Catalogo() {
           obras={obras}
           categoria={categoria}
           colecao={colecao}
+          disponibilidade={disponibilidade}
           onCategoriaChange={setCategoria}
           onColecaoChange={setColecao}
+          onDisponibilidadeChange={setDisponibilidade}
         />
       </section>
 
