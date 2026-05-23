@@ -1,10 +1,10 @@
 import { urlOtimizada } from '@/lib/cloudinary';
 
-export default function Imagem({ publicId, alt = '', size = 'card', priority = false, style }) {
+export default function Imagem({ publicId, alt = '', size = 'card', priority = false, crop = null, style }) {
   if (!publicId) return null;
   return (
     <img
-      src={urlOtimizada(publicId, size)}
+      src={urlOtimizada(publicId, size, crop)}
       alt={alt}
       loading={priority ? 'eager' : 'lazy'}
       decoding="async"

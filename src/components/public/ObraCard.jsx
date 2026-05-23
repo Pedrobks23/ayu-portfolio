@@ -34,6 +34,7 @@ export default function ObraCard({ obra, onHoverChange }) {
         {capa ? (
           <Imagem
             publicId={capa.publicId}
+            crop={capa.crop}
             alt={obra.titulo}
             size="card"
             style={{

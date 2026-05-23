@@ -4,6 +4,7 @@ import imageCompression from 'browser-image-compression';
 import { useObras } from '@/context/ObrasContext';
 import { uploadImagem, urlOtimizada } from '@/lib/cloudinary';
 import { slugify } from '@/lib/utils';
+import CropModal from '@/components/admin/CropModal';
 
 const DISPONIBILIDADES = ['Disponível', 'Sob consulta', 'Indisponível'];
 const TIPOS = ['Escultura', 'Pintura'];
@@ -68,6 +69,7 @@ export default function FormObra({ obraExistente }) {
       bytes: img.bytes ?? 0,
       width: img.width ?? 0,
       height: img.height ?? 0,
+      crop: img.crop ?? null,
       preview: img.url,
       uploading: false,
       erro: null,
@@ -75,6 +77,7 @@ export default function FormObra({ obraExistente }) {
   );
   const [erro, setErro] = useState('');
   const [salvando, setSalvando] = useState(false);
+  const [cropModalId, setCropModalId] = useState(null);
 
   const editando = Boolean(obraExistente);
   const colecoes = [...new Set(obras.map(o => o.colecao).filter(Boolean))];
@@ -142,7 +145,7 @@ export default function FormObra({ obraExistente }) {
         setImagens(prev =>
           prev.map(i =>
             i.id === item.id
-              ? { ...i, publicId, url, bytes, width, height, preview: url, uploading: false, _file: undefined }
+              ? { ...i, publicId, url, bytes, width, height, crop: null, preview: url, uploading: false, _file: undefined }
               : i
           )
         );
@@ -197,7 +200,7 @@ export default function FormObra({ obraExistente }) {
 
     const imagensSalvas = imagens
       .filter(i => i.publicId && !i.erro)
-      .map((i, idx) => ({ publicId: i.publicId, url: i.url, bytes: i.bytes ?? 0, width: i.width ?? 0, height: i.height ?? 0, ordem: idx }));
+      .map((i, idx) => ({ publicId: i.publicId, url: i.url, bytes: i.bytes ?? 0, width: i.width ?? 0, height: i.height ?? 0, crop: i.crop ?? null, ordem: idx }));
 
     const dadosObra = { ...form, slug, imagens: imagensSalvas };
 
@@ -237,7 +240,21 @@ export default function FormObra({ obraExistente }) {
   };
   const selectStyle = { ...inputStyle, cursor: 'pointer', appearance: 'none' };
 
+  const imgParaCrop = imagens.find(i => i.id === cropModalId);
+
   return (
+    <>
+    {imgParaCrop && (
+      <CropModal
+        imagemUrl={imgParaCrop.url}
+        cropInicial={imgParaCrop.crop}
+        onConfirmar={crop => {
+          setImagens(prev => prev.map(i => i.id === cropModalId ? { ...i, crop } : i));
+          setCropModalId(null);
+        }}
+        onFechar={() => setCropModalId(null)}
+      />
+    )}
     <form onSubmit={handleSubmit}>
       <div
         style={{
@@ -534,7 +551,7 @@ export default function FormObra({ obraExistente }) {
                 }}
               >
                 <img
-                  src={img.preview}
+                  src={img.publicId && !img.uploading ? urlOtimizada(img.publicId, 'thumb', img.crop) : img.preview}
                   alt=""
                   style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
                 />
@@ -602,6 +619,26 @@ export default function FormObra({ obraExistente }) {
               </div>
 
               <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 0 }}>
+                {img.publicId && !img.uploading && !img.erro && (
+                  <button
+                    type="button"
+                    onClick={() => setCropModalId(img.id)}
+                    title="Ajustar enquadramento"
+                    style={{
+                      background: 'none',
+                      border: '1px solid rgba(26,26,26,0.25)',
+                      cursor: 'pointer',
+                      padding: '4px 8px',
+                      fontSize: '0.55rem',
+                      letterSpacing: '0.1em',
+                      textTransform: 'uppercase',
+                      fontFamily: 'var(--sans)',
+                      color: 'var(--text)',
+                    }}
+                  >
+                    Ajustar
+                  </button>
+                )}
                 <button type="button" onClick={() => moverImagem(idx, -1)} disabled={idx === 0}
                   title="Mover para cima"
                   style={{ background: 'none', border: 'none', cursor: idx === 0 ? 'default' : 'pointer', opacity: idx === 0 ? 0.3 : 1, padding: '4px 6px', fontSize: '0.8rem', color: 'var(--text)' }}>
@@ -686,5 +723,6 @@ export default function FormObra({ obraExistente }) {
         </button>
       </div>
     </form>
+    </>
   );
 }

@@ -110,7 +110,12 @@ const TAMANHOS = {
   full:  'f_auto,q_auto:best,w_1600',
 };
 
-export function urlOtimizada(publicId, tamanho = 'card') {
+export function urlOtimizada(publicId, tamanho = 'card', crop = null) {
   if (!publicId) return '';
-  return `https://res.cloudinary.com/${CLOUD}/image/upload/${TAMANHOS[tamanho]}/${publicId}`;
+  const base = TAMANHOS[tamanho];
+  const aplicaCrop = crop && (tamanho === 'thumb' || tamanho === 'card');
+  const cropStr = aplicaCrop
+    ? `c_crop,x_${Math.round(crop.x)},y_${Math.round(crop.y)},w_${Math.round(crop.w)},h_${Math.round(crop.h)}/`
+    : '';
+  return `https://res.cloudinary.com/${CLOUD}/image/upload/${cropStr}${base}/${publicId}`;
 }

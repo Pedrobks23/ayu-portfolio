@@ -466,7 +466,7 @@ export default function Dashboard() {
                       >
                         {capa ? (
                           <img
-                            src={urlOtimizada(capa.publicId, 'thumb')}
+                            src={urlOtimizada(capa.publicId, 'thumb', capa.crop)}
                             alt=""
                             loading="lazy"
                             style={{

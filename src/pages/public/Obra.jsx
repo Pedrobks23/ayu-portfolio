@@ -294,6 +294,7 @@ export default function Obra() {
                 >
                   <Imagem
                     publicId={img.publicId}
+                    crop={img.crop}
                     alt=""
                     size="thumb"
                     style={{ filter: 'grayscale(15%) brightness(0.8)' }}
