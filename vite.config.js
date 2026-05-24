@@ -15,4 +15,9 @@ export default defineConfig({
   optimizeDeps: {
     exclude: ['libheif-js'],
   },
+  test: {
+    environment: 'happy-dom',
+    globals: true,
+    setupFiles: ['./src/test/setup.js'],
+  },
 });
