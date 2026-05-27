@@ -1,5 +1,5 @@
-import { lazy, Suspense } from 'react';
-import { BrowserRouter, Routes, Route, Outlet } from 'react-router-dom';
+import { lazy, Suspense, useEffect } from 'react';
+import { BrowserRouter, Routes, Route, Outlet, useLocation } from 'react-router-dom';
 import { Analytics } from '@vercel/analytics/react';
 import { AuthProvider } from '@/context/AuthContext';
 import { ObrasProvider } from '@/context/ObrasContext';
@@ -20,6 +20,12 @@ const Configuracoes     = lazy(() => import('@/pages/admin/Configuracoes'));
 const Participacoes     = lazy(() => import('@/pages/admin/Participacoes'));
 const ParticipacaoForm  = lazy(() => import('@/pages/admin/ParticipacaoForm'));
 
+function ScrollToTop() {
+  const { pathname } = useLocation();
+  useEffect(() => { window.scrollTo(0, 0); }, [pathname]);
+  return null;
+}
+
 function PublicLayout() {
   return (
     <>
@@ -36,6 +42,7 @@ export default function App() {
         <ObrasProvider>
           <LanguageProvider>
             <BrowserRouter>
+              <ScrollToTop />
               <Routes>
                 <Route element={<PublicLayout />}>
                   <Route path="/" element={<Inicio />} />

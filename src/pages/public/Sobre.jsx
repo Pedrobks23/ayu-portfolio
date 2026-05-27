@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import FadeImg from '@/components/public/FadeImg';
 import Footer from '@/components/public/Footer';
 import { HoverUnderlineBtn } from '@/components/public/ui';
 import { useConfiguracoes } from '@/hooks/useConfiguracoes';
@@ -33,35 +32,9 @@ export default function Sobre() {
       <section style={{ padding: 'clamp(64px,8vw,120px) clamp(24px,5vw,72px)' }}>
         <div
           style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-            gap: 'clamp(48px,6vw,96px)',
-            alignItems: 'start',
+            maxWidth: '640px',
           }}
         >
-          {/* Foto */}
-          <div>
-            <div
-              style={{
-                background: '#0D0D0D',
-                aspectRatio: '3/4',
-                overflow: 'hidden',
-              }}
-            >
-              <FadeImg
-                src="https://picsum.photos/seed/ayume-artist/600/800"
-                alt="Ayume Andrade"
-                style={{
-                  width: '100%',
-                  height: '100%',
-                  objectFit: 'cover',
-                  display: 'block',
-                  filter: 'grayscale(20%) contrast(1.05) brightness(0.8)',
-                }}
-              />
-            </div>
-          </div>
-
           {/* Bio */}
           <div>
             <div
