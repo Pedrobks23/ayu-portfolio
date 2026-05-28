@@ -19,7 +19,7 @@ function dispColor(disponibilidade) {
 function ModalContato({ obra, contato, onClose, t }) {
   const titulo = encodeURIComponent(obra.titulo);
   const whatsappUrl = `https://wa.me/${contato.whatsapp}?text=${encodeURIComponent(
-    `Olá! Tenho interesse na obra "${obra.titulo}". Está disponível?`
+    `Olá! Gostaria de adquirir a obra "${obra.titulo}". Poderia me passar mais informações?`
   )}`;
   const emailUrl = `mailto:${contato.email}?subject=${encodeURIComponent(
     `Interesse na obra "${obra.titulo}"`
@@ -181,12 +181,13 @@ export default function Obra() {
     { label: t('obra.ano'), value: obra.ano },
     { label: t('obra.tecnica'), value: tecnica },
     { label: t('obra.dimensoes'), value: obra.dimensoes },
+    obra.precoVisivel && obra.preco ? { label: t('obra.preco'), value: obra.preco } : null,
     {
       label: t('obra.disponibilidade'),
       value: traduzirDisponibilidade(obra.disponibilidade, t),
       color: dispColor(obra.disponibilidade),
     },
-  ].filter(row => row.value);
+  ].filter(Boolean).filter(row => row.value);
 
   return (
     <div
@@ -387,10 +388,12 @@ export default function Obra() {
             </div>
           )}
 
-          <BtnBlack
-            label={t('obra.consultar')}
-            onClick={() => setModalAberto(true)}
-          />
+          {obra.disponibilidade !== 'Indisponível' && (
+            <BtnBlack
+              label={t('obra.consultar')}
+              onClick={() => setModalAberto(true)}
+            />
+          )}
         </div>
       </div>
 

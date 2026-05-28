@@ -29,6 +29,8 @@ const estadoVazio = {
   tecnica: '',
   dimensoes: '',
   disponibilidade: 'Disponível',
+  preco: '',
+  precoVisivel: false,
   descricao: '',
   visivel: true,
   destaque: false,
@@ -340,6 +342,30 @@ export default function FormObra({ obraExistente }) {
               onChange={e => set('disponibilidade', e.target.value)} style={selectStyle}>
               {DISPONIBILIDADES.map(d => <option key={d} value={d}>{d}</option>)}
             </select>
+          </div>
+
+          <div>
+            <label style={labelStyle} htmlFor="preco">Valor (opcional)</label>
+            <input
+              id="preco"
+              type="text"
+              value={form.preco || ''}
+              onChange={e => set('preco', e.target.value)}
+              style={inputStyle}
+              placeholder="R$ 1.200,00"
+            />
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '10px' }}>
+              <input
+                id="precoVisivel"
+                type="checkbox"
+                checked={form.precoVisivel || false}
+                onChange={e => set('precoVisivel', e.target.checked)}
+                style={{ width: '14px', height: '14px', cursor: 'pointer' }}
+              />
+              <label htmlFor="precoVisivel" style={{ ...labelStyle, marginBottom: 0, cursor: 'pointer' }}>
+                Exibir valor na página da obra
+              </label>
+            </div>
           </div>
 
           <div>
