@@ -146,7 +146,7 @@ const configInicial = {
   bio: 'Ayume Andrade é artista visual contemporânea. Sua prática em cerâmica investiga a memória como eixo central, a partir da relação com a matéria. Desenvolve esculturas em cerâmica esmaltada a partir dessas reminiscências.',
   heroImagem: null,
   contato: {
-    email: 'ayumeandrade@gmail.com',
+    email: 'ayumeandrade00@gmail.com',
     instagram: '@ayuandrade',
     instagramUrl: 'https://www.instagram.com/ayuandrade/',
     whatsapp: '5585996195880',

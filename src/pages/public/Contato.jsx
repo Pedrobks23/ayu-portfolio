@@ -43,7 +43,7 @@ export default function Contato() {
   }
 
   const contato = config?.contato || {};
-  const emailContato = contato.email || 'ayumeandrade@gmail.com';
+  const emailContato = contato.email || 'ayumeandrade00@gmail.com';
   const instagram = contato.instagram || '@ayuandrade';
   const instagramUrl = contato.instagramUrl || 'https://www.instagram.com/ayuandrade/';
 
