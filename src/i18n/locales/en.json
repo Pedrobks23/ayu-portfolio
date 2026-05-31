@@ -65,7 +65,9 @@
     "labelEmailContato": "E-mail",
     "labelInstagram": "Instagram",
     "respostaInfo": "We respond to all enquiries within 3 business days. For questions about artwork availability, please mention the title in the corresponding field.",
-    "abrirWhatsApp": "Send message →"
+    "abrirWhatsApp": "Send message →",
+    "enviando": "Sending...",
+    "erroEnvio": "Your message could not be sent. Please check your connection and try again."
   },
   "footer": {
     "direitos": "© 2025 — All rights reserved"

@@ -65,7 +65,9 @@
     "labelEmailContato": "E-mail",
     "labelInstagram": "Instagram",
     "respostaInfo": "Respondemos a todas as consultas em até 3 dias úteis. Para questões sobre disponibilidade de obras, informe o título da obra no campo correspondente.",
-    "abrirWhatsApp": "Enviar mensagem →"
+    "abrirWhatsApp": "Enviar mensagem →",
+    "enviando": "Enviando...",
+    "erroEnvio": "Não foi possível enviar a mensagem. Verifique sua conexão e tente novamente."
   },
   "footer": {
     "direitos": "© 2025 — Todos os direitos reservados"
