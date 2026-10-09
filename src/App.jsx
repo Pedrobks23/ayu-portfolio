@@ -19,6 +19,8 @@ const ObraForm          = lazy(() => import('@/pages/admin/ObraForm'));
 const Configuracoes     = lazy(() => import('@/pages/admin/Configuracoes'));
 const Participacoes     = lazy(() => import('@/pages/admin/Participacoes'));
 const ParticipacaoForm  = lazy(() => import('@/pages/admin/ParticipacaoForm'));
+const Colecoes          = lazy(() => import('@/pages/admin/Colecoes'));
+const ColecaoForm       = lazy(() => import('@/pages/admin/ColecaoForm'));
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -110,6 +112,31 @@ export default function App() {
                   element={
                     <RotaProtegida>
                       <Suspense fallback={null}><ParticipacaoForm /></Suspense>
+                    </RotaProtegida>
+                  }
+                />
+
+                <Route
+                  path="/painel-ayume/colecoes"
+                  element={
+                    <RotaProtegida>
+                      <Suspense fallback={null}><Colecoes /></Suspense>
+                    </RotaProtegida>
+                  }
+                />
+                <Route
+                  path="/painel-ayume/colecoes/nova"
+                  element={
+                    <RotaProtegida>
+                      <Suspense fallback={null}><ColecaoForm /></Suspense>
+                    </RotaProtegida>
+                  }
+                />
+                <Route
+                  path="/painel-ayume/colecoes/:id/editar"
+                  element={
+                    <RotaProtegida>
+                      <Suspense fallback={null}><ColecaoForm /></Suspense>
                     </RotaProtegida>
                   }
                 />

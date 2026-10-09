@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
-  collection, addDoc, doc, getDoc, updateDoc, setDoc, serverTimestamp, Timestamp
+  collection, addDoc, doc, getDoc, updateDoc, serverTimestamp, Timestamp, deleteField
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import AdminLayout from '@/components/admin/AdminLayout';
+import { isPassada } from '@/lib/participacoes';
 
 const estadoVazio = {
   titulo: '',
@@ -13,6 +14,7 @@ const estadoVazio = {
   dataInicioStr: '',
   dataFimStr: '',
   visivel: true,
+  situacao: 'auto',
   ordem: 0,
   tituloEn: '',
   localEn: '',
@@ -23,6 +25,13 @@ function strToTimestamp(str) {
   if (!str) return null;
   const d = new Date(str + 'T00:00:00');
   return isNaN(d.getTime()) ? null : Timestamp.fromDate(d);
+}
+
+// Campo `passada` no Firestore: true / false / ausente (automático pela data)
+function situacaoDoDoc(d) {
+  if (d.passada === true) return 'passada';
+  if (d.passada === false) return 'proxima';
+  return 'auto';
 }
 
 function timestampToStr(ts) {
@@ -54,6 +63,7 @@ export default function ParticipacaoForm() {
           dataInicioStr: timestampToStr(d.dataInicio),
           dataFimStr: timestampToStr(d.dataFim),
           visivel: d.visivel !== false,
+          situacao: situacaoDoDoc(d),
           ordem: d.ordem ?? 0,
           tituloEn: d.tituloEn || '',
           localEn: d.localEn || '',
@@ -90,11 +100,17 @@ export default function ParticipacaoForm() {
         dataEn: form.dataEn.trim(),
         atualizadoEm: serverTimestamp(),
       };
+      const passada =
+        form.situacao === 'passada' ? true : form.situacao === 'proxima' ? false : null;
       if (editando) {
-        await updateDoc(doc(db, 'participacoes', id), dados);
+        await updateDoc(doc(db, 'participacoes', id), {
+          ...dados,
+          passada: passada === null ? deleteField() : passada,
+        });
       } else {
         await addDoc(collection(db, 'participacoes'), {
           ...dados,
+          ...(passada === null ? {} : { passada }),
           criadoEm: serverTimestamp(),
         });
       }
@@ -198,6 +214,29 @@ export default function ParticipacaoForm() {
                   onChange={e => set('dataFimStr', e.target.value)}
                   style={{ ...inputStyle, fontFamily: 'var(--sans)', fontSize: '0.9rem' }} />
               </div>
+            </div>
+
+            <div>
+              <label style={labelStyle} htmlFor="situacao">Seção no site</label>
+              <select id="situacao" value={form.situacao}
+                onChange={e => set('situacao', e.target.value)}
+                style={{ ...inputStyle, fontFamily: 'var(--sans)', fontSize: '0.9rem', cursor: 'pointer' }}>
+                <option value="auto">Automática (vai para "Passadas" quando a data acabar)</option>
+                <option value="proxima">Sempre em "Próximas"</option>
+                <option value="passada">Mover para "Passadas"</option>
+              </select>
+              {form.situacao === 'auto' && (
+                <div style={{ fontFamily: 'var(--sans)', fontSize: '0.65rem', color: 'var(--mid)', marginTop: '8px', lineHeight: 1.6 }}>
+                  {!form.dataInicioStr && !form.dataFimStr
+                    ? 'Sem data início/fim preenchida, ela fica em "Próximas" até você mover.'
+                    : isPassada({
+                        dataInicio: form.dataInicioStr ? new Date(form.dataInicioStr + 'T00:00:00') : null,
+                        dataFim: form.dataFimStr ? new Date(form.dataFimStr + 'T00:00:00') : null,
+                      })
+                      ? 'Pelas datas, ela aparece hoje em "Passadas".'
+                      : 'Pelas datas, ela aparece hoje em "Próximas".'}
+                </div>
+              )}
             </div>
 
             <div>

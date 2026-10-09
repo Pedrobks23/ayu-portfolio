@@ -65,6 +65,22 @@ export default function AdminLayout({ children }) {
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '20px', flexWrap: 'wrap' }}>
           <button
+            onClick={() => navigate('/painel-ayume/colecoes')}
+            style={{
+              fontFamily: 'var(--sans)',
+              fontSize: '0.62rem',
+              letterSpacing: '0.18em',
+              textTransform: 'uppercase',
+              color: 'var(--mid)',
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            Coleções
+          </button>
+          <button
             onClick={() => navigate('/painel-ayume/participacoes')}
             style={{
               fontFamily: 'var(--sans)',

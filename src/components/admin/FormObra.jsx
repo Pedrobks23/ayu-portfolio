@@ -5,6 +5,8 @@ import { useObras } from '@/context/ObrasContext';
 import { uploadImagem, urlOtimizada } from '@/lib/cloudinary';
 import { slugify } from '@/lib/utils';
 import CropModal from '@/components/admin/CropModal';
+import { useColecoes } from '@/hooks/useColecoes';
+import { chaveColecao } from '@/lib/colecoes';
 
 const DISPONIBILIDADES = ['Disponível', 'Sob consulta', 'Indisponível'];
 const TIPOS = ['Escultura', 'Pintura'];
@@ -82,7 +84,8 @@ export default function FormObra({ obraExistente }) {
   const [cropModalId, setCropModalId] = useState(null);
 
   const editando = Boolean(obraExistente);
-  const colecoes = [...new Set(obras.map(o => o.colecao).filter(Boolean))];
+  const { colecoes } = useColecoes();
+  const colecaoAtualCadastrada = colecoes.find(c => chaveColecao(c.nome) === chaveColecao(form.colecao));
   const uploadandoAlguma = imagens.some(i => i.uploading);
 
   useEffect(() => {
@@ -292,16 +295,36 @@ export default function FormObra({ obraExistente }) {
 
           <div>
             <label style={labelStyle} htmlFor="colecao">Coleção</label>
-            <input
-              id="colecao" type="text" list="colecoes-lista"
-              value={form.colecao}
-              onChange={e => set('colecao', e.target.value)}
-              style={inputStyle}
-              placeholder="8.092 dias em casa"
-            />
-            <datalist id="colecoes-lista">
-              {colecoes.map(c => <option key={c} value={c} />)}
-            </datalist>
+            <select
+              id="colecao"
+              value={colecaoAtualCadastrada ? colecaoAtualCadastrada.id : form.colecao ? '__atual__' : ''}
+              onChange={e => {
+                const c = colecoes.find(x => x.id === e.target.value);
+                if (c) {
+                  setForm(prev => ({ ...prev, colecao: c.nome, colecaoEn: c.nomeEn || '' }));
+                } else if (e.target.value === '') {
+                  setForm(prev => ({ ...prev, colecao: '', colecaoEn: '' }));
+                }
+              }}
+              style={selectStyle}
+            >
+              <option value="">— Sem coleção —</option>
+              {colecoes.map(c => (
+                <option key={c.id} value={c.id}>
+                  {c.nome}{c.visivel === false ? ' (oculta)' : ''}
+                </option>
+              ))}
+              {form.colecao && !colecaoAtualCadastrada && (
+                <option value="__atual__">{form.colecao} (não cadastrada)</option>
+              )}
+            </select>
+            <div style={{ fontFamily: 'var(--sans)', fontSize: '0.65rem', color: 'var(--mid)', marginTop: '6px' }}>
+              Nova coleção?{' '}
+              <a href="/painel-ayume/colecoes/nova" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--text)' }}>
+                Cadastre aqui
+              </a>{' '}
+              (abre em outra aba; ela aparece nesta lista na hora).
+            </div>
           </div>
 
           <div>

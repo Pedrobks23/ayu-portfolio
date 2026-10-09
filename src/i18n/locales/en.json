@@ -14,19 +14,16 @@
     "secaoDestaquesTitulo": "Featured works",
     "verCatalogo": "View full catalogue →",
     "semParticipacoes": "No exhibitions announced at this time.",
-    "semDestaques": "No featured works at this time."
+    "semDestaques": "No featured works at this time.",
+    "participacoesPassadas": "Past exhibitions",
+    "verPassadas": "View past exhibitions",
+    "ocultarPassadas": "Hide past exhibitions"
   },
   "catalogo": {
     "kicker": "Full collection",
     "titulo": "Catalogue",
-    "filtroTodas": "All",
-    "filtroPintura": "Painting",
-    "filtroEscultura": "Sculpture",
-    "todasColecoes": "All collections",
-    "todasDisponibilidades": "All",
-    "filtroDisponivel": "Available",
-    "filtroIndisponivel": "Unavailable",
-    "semObras": "No works found."
+    "semObras": "No works found.",
+    "outrasObras": "Other works"
   },
   "obra": {
     "voltar": "← Catalogue",

@@ -1,33 +1,72 @@
 import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useObras } from '@/context/ObrasContext';
+import { useColecoes } from '@/hooks/useColecoes';
 import ObraCard from '@/components/public/ObraCard';
 import FiltroCatalogo from '@/components/public/FiltroCatalogo';
 import Footer from '@/components/public/Footer';
 import { useT } from '@/i18n/useT';
+import { useLang } from '@/context/LanguageContext';
+import { getLocalized } from '@/i18n/getLocalized';
+import {
+  chaveColecao,
+  colecoesDoCatalogo,
+  obraPertence,
+  obrasSemColecao,
+} from '@/lib/colecoes';
+
+const OUTRAS = 'outras';
 
 export default function Catalogo() {
-  const { obras } = useObras();
-  const [categoria, setCategoria] = useState('Todas');
-  const [colecao, setColecao] = useState('Todas');
-  const [disponibilidade, setDisponibilidade] = useState('Todas');
+  const { obras, loading: loadingObras } = useObras();
+  const { colecoes, loading: loadingColecoes } = useColecoes();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [anyHovered, setAnyHovered] = useState(false);
   const [visible, setVisible] = useState(false);
   const { t } = useT();
+  const { lang } = useLang();
 
   useEffect(() => {
     const tId = setTimeout(() => setVisible(true), 10);
     return () => clearTimeout(tId);
   }, []);
 
-  const filtered = obras
-    .filter(o => {
-      if (o.visivel === false) return false;
-      if (categoria !== 'Todas' && o.tipo !== categoria) return false;
-      if (colecao !== 'Todas' && o.colecao !== colecao) return false;
-      if (disponibilidade !== 'Todas' && o.disponibilidade !== disponibilidade) return false;
-      return true;
-    })
+  const obrasVisiveis = obras
+    .filter(o => o.visivel !== false)
     .sort((a, b) => (a.ordem ?? 0) - (b.ordem ?? 0));
+
+  const exibidas = colecoesDoCatalogo(colecoes, obrasVisiveis);
+  const semColecao = obrasSemColecao(colecoes, obrasVisiveis);
+
+  const opcoes = [
+    ...exibidas.map(c => ({
+      chave: chaveColecao(c.nome),
+      label: getLocalized(c, 'nome', lang) || c.nome,
+      colecao: c,
+    })),
+    ...(semColecao.length > 0
+      ? [{ chave: OUTRAS, label: t('catalogo.outrasObras'), colecao: null }]
+      : []),
+  ];
+
+  const pedida = searchParams.get('colecao');
+  const selecionada = opcoes.find(o => o.chave === pedida) ?? opcoes[0] ?? null;
+
+  function selecionar(chave) {
+    setSearchParams(chave === opcoes[0]?.chave ? {} : { colecao: chave }, { replace: true });
+  }
+
+  const filtered = !selecionada
+    ? []
+    : selecionada.colecao
+      ? obrasVisiveis.filter(o => obraPertence(o, selecionada.colecao))
+      : semColecao;
+
+  const descricao = selecionada?.colecao
+    ? getLocalized(selecionada.colecao, 'descricao', lang) || selecionada.colecao.descricao || ''
+    : '';
+
+  const carregando = loadingObras || loadingColecoes;
 
   return (
     <div
@@ -65,19 +104,57 @@ export default function Catalogo() {
         >
           {t('catalogo.titulo')}
         </div>
-        <FiltroCatalogo
-          obras={obras}
-          categoria={categoria}
-          colecao={colecao}
-          disponibilidade={disponibilidade}
-          onCategoriaChange={setCategoria}
-          onColecaoChange={setColecao}
-          onDisponibilidadeChange={setDisponibilidade}
-        />
+        {opcoes.length > 1 && (
+          <FiltroCatalogo
+            opcoes={opcoes}
+            selecionada={selecionada?.chave}
+            onChange={selecionar}
+          />
+        )}
       </section>
 
+      {/* Descrição da coleção */}
+      {selecionada?.colecao && (
+        <section
+          key={selecionada.chave}
+          style={{
+            padding: '8px clamp(24px,5vw,72px) clamp(40px,5vw,64px)',
+            animation: 'fadeIn 0.35s ease-out',
+          }}
+        >
+          <div
+            style={{
+              fontFamily: 'var(--serif)',
+              fontSize: 'clamp(1.6rem,2.6vw,2.2rem)',
+              fontStyle: 'italic',
+              fontWeight: 300,
+              marginBottom: descricao ? '18px' : 0,
+            }}
+          >
+            {selecionada.label}
+          </div>
+          {descricao && (
+            <div
+              style={{
+                maxWidth: '680px',
+                fontFamily: 'var(--serif)',
+                fontSize: '1.05rem',
+                lineHeight: 1.75,
+                color: 'var(--text)',
+              }}
+            >
+              {descricao.split(/\n\s*\n/).map((par, i) => (
+                <p key={i} style={{ margin: i === 0 ? 0 : '1em 0 0', whiteSpace: 'pre-line' }}>
+                  {par.trim()}
+                </p>
+              ))}
+            </div>
+          )}
+        </section>
+      )}
+
       <section style={{ padding: '8px clamp(24px,5vw,72px) clamp(64px,8vw,120px)' }}>
-        {filtered.length > 0 ? (
+        {carregando ? null : filtered.length > 0 ? (
           <div
             style={{
               display: 'grid',

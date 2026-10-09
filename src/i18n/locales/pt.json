@@ -14,19 +14,16 @@
     "secaoDestaquesTitulo": "Obras em destaque",
     "verCatalogo": "Ver catálogo completo →",
     "semParticipacoes": "Nenhuma participação anunciada no momento.",
-    "semDestaques": "Nenhuma obra em destaque no momento."
+    "semDestaques": "Nenhuma obra em destaque no momento.",
+    "participacoesPassadas": "Participações passadas",
+    "verPassadas": "Ver participações passadas",
+    "ocultarPassadas": "Ocultar participações passadas"
   },
   "catalogo": {
     "kicker": "Coleção completa",
     "titulo": "Catálogo",
-    "filtroTodas": "Todas",
-    "filtroPintura": "Pintura",
-    "filtroEscultura": "Escultura",
-    "todasColecoes": "Todas as coleções",
-    "todasDisponibilidades": "Todas",
-    "filtroDisponivel": "Disponível",
-    "filtroIndisponivel": "Indisponível",
-    "semObras": "Nenhuma obra encontrada."
+    "semObras": "Nenhuma obra encontrada.",
+    "outrasObras": "Outras obras"
   },
   "obra": {
     "voltar": "← Catálogo",
