@@ -215,6 +215,34 @@ export default function Configuracoes() {
               >
                 {uploadandoHero ? 'Fazendo upload...' : form.heroImagem ? 'Trocar imagem hero' : 'Adicionar imagem hero'}
               </button>
+              {form.heroImagem && !uploadandoHero && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (window.confirm('Remover a imagem hero? A home fica com fundo escuro, sem imagem.')) {
+                      setField('heroImagem', null);
+                    }
+                  }}
+                  style={{
+                    fontFamily: 'var(--sans)',
+                    fontSize: '0.6rem',
+                    letterSpacing: '0.15em',
+                    textTransform: 'uppercase',
+                    background: 'none',
+                    border: 'none',
+                    padding: '10px 20px',
+                    cursor: 'pointer',
+                    color: '#8a3030',
+                  }}
+                >
+                  Remover imagem
+                </button>
+              )}
+              {(form.heroImagem?.publicId ?? null) !== (config.heroImagem?.publicId ?? null) && (
+                <div style={{ fontFamily: 'var(--sans)', fontSize: '0.65rem', color: 'var(--mid)', marginTop: '10px' }}>
+                  Alteração pendente — clique em “Salvar” no fim da página para aplicar no site.
+                </div>
+              )}
               <input
                 ref={heroRef}
                 type="file"
