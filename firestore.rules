@@ -1,9 +1,19 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{db}/documents {
+    // Só estas contas podem alterar o site (UIDs do Firebase Authentication).
+    // Para dar acesso a outra pessoa, adicione o UID dela aqui e publique de novo no console.
+    function isAdmin() {
+      return request.auth != null
+        && request.auth.uid in [
+          'LIm4hhpFMCO5XboBVnCjRTsIVFg2', // Ayume
+          '8zKdegdMwqadVHmKxtkpZpJxUvz2'  // Pedro
+        ];
+    }
+
     match /{document=**} {
       allow read: if true;
-      allow write: if request.auth != null;
+      allow write: if isAdmin();
     }
   }
 }
