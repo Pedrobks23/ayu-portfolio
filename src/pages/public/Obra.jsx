@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useObras } from '@/context/ObrasContext';
 import { useConfiguracoes } from '@/hooks/useConfiguracoes';
@@ -9,6 +9,16 @@ import { BtnBlack } from '@/components/public/ui';
 import { useT } from '@/i18n/useT';
 import { useLang } from '@/context/LanguageContext';
 import { getLocalized, traduzirDisponibilidade } from '@/i18n/getLocalized';
+
+// Fisher–Yates: embaralha uma cópia sem alterar o array original
+function embaralhar(lista) {
+  const a = [...lista];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
 
 function dispColor(disponibilidade) {
   if (disponibilidade === 'Disponível') return '#3a6b3a';
@@ -164,11 +174,21 @@ export default function Obra() {
     return () => clearTimeout(tId);
   }, []);
 
+  // "Outras obras": sorteia 3 a cada obra aberta. Só sorteia de novo se mudar
+  // a obra ou o conjunto de obras visíveis (evita trocar a cada atualização do banco).
+  const elegiveis = obras.filter(o => o.slug !== slug && o.visivel !== false);
+  const chaveElegiveis = elegiveis.map(o => o.slug).join('|');
+  const slugsSorteados = useMemo(
+    () => embaralhar(elegiveis.map(o => o.slug)).slice(0, 3),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [slug, chaveElegiveis]
+  );
+  const outras = slugsSorteados.map(s => elegiveis.find(o => o.slug === s)).filter(Boolean);
+
   if (loading) return null;
   if (!obra) return null;
 
   const imagens = obra.imagens || [];
-  const outras = obras.filter(o => o.slug !== slug && o.visivel !== false).slice(0, 3);
   const contato = config?.contato || {};
 
   const titulo = getLocalized(obra, 'titulo', lang) || obra.titulo;
