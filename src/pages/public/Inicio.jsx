@@ -37,7 +37,7 @@ export default function Inicio() {
       <SecaoParticipacoes />
 
       {/* Obras em destaque */}
-      <section style={{ padding: 'clamp(64px,8vw,120px) clamp(24px,5vw,72px)' }}>
+      <section style={{ padding: 'clamp(32px,4vw,56px) clamp(24px,5vw,72px) clamp(64px,8vw,120px)' }}>
         <div
           style={{
             display: 'flex',

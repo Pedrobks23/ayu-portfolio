@@ -82,7 +82,7 @@ export default function SecaoParticipacoes() {
   return (
     <section
       style={{
-        padding: 'clamp(64px,8vw,120px) clamp(24px,5vw,72px)',
+        padding: 'clamp(64px,8vw,120px) clamp(24px,5vw,72px) 0',
         borderTop: '1px solid rgba(26,26,26,0.08)',
       }}
     >
