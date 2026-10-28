@@ -5,7 +5,6 @@ import AdminLayout from '@/components/admin/AdminLayout';
 import { useConfiguracoes } from '@/hooks/useConfiguracoes';
 import { uploadImagem, urlOtimizada } from '@/lib/cloudinary';
 import TraducaoIngles from '@/components/admin/TraducaoIngles';
-import TraduzirPendentes from '@/components/admin/TraduzirPendentes';
 import { completarTraducoes } from '@/lib/traducao';
 
 const CAMPOS_TRADUZIVEIS = [{ campo: 'bio', label: 'Bio', multiline: true, rows: 6 }];
@@ -182,13 +181,6 @@ export default function Configuracoes() {
           }}
         >
           Configurações
-        </div>
-
-        <div style={{ marginBottom: '40px' }}>
-          <TraduzirPendentes
-            config={config}
-            onBioTraduzida={en => setField('bioEn', en)}
-          />
         </div>
 
         <form onSubmit={handleSalvar}>

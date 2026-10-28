@@ -7,8 +7,8 @@ import ObraCard from '@/components/public/ObraCard';
 import Footer from '@/components/public/Footer';
 import { BtnBlack } from '@/components/public/ui';
 import { useT } from '@/i18n/useT';
-import { useLang } from '@/context/LanguageContext';
-import { getLocalized, traduzirDisponibilidade, traduzirTipo } from '@/i18n/getLocalized';
+import { traduzirDisponibilidade, traduzirTipo } from '@/i18n/getLocalized';
+import { useTextoTraduzido } from '@/i18n/useTraducao';
 
 // Fisher–Yates: embaralha uma cópia sem alterar o array original
 function embaralhar(lista) {
@@ -159,7 +159,6 @@ export default function Obra() {
   const [visible, setVisible] = useState(false);
   const [modalAberto, setModalAberto] = useState(false);
   const { t } = useT();
-  const { lang } = useLang();
 
   const obra = getObra(slug) ?? (!loading ? obras[0] : null);
 
@@ -184,6 +183,10 @@ export default function Obra() {
   );
   const outras = slugsSorteados.map(s => elegiveis.find(o => o.slug === s)).filter(Boolean);
 
+  // Textos no idioma atual (hooks precisam vir antes dos returns abaixo)
+  const tecnica = useTextoTraduzido(obra, 'tecnica');
+  const descricao = useTextoTraduzido(obra, 'descricao');
+
   if (loading) return null;
   if (!obra) return null;
 
@@ -192,9 +195,7 @@ export default function Obra() {
 
   // Nomes de obra e de coleção ficam sempre no original, em qualquer idioma
   const titulo = obra.titulo;
-  const tecnica = getLocalized(obra, 'tecnica', lang) || obra.tecnica;
   const colecaoVal = obra.colecao;
-  const descricao = getLocalized(obra, 'descricao', lang) || obra.descricao;
 
   const metaRows = [
     { label: t('obra.colecao'), value: colecaoVal, serif: true },

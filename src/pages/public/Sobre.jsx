@@ -4,22 +4,20 @@ import Footer from '@/components/public/Footer';
 import { HoverUnderlineBtn } from '@/components/public/ui';
 import { useConfiguracoes } from '@/hooks/useConfiguracoes';
 import { useT } from '@/i18n/useT';
-import { useLang } from '@/context/LanguageContext';
-import { getLocalized } from '@/i18n/getLocalized';
+import { useTextoTraduzido } from '@/i18n/useTraducao';
 
 export default function Sobre() {
   const navigate = useNavigate();
   const { config } = useConfiguracoes();
   const [visible, setVisible] = useState(false);
   const { t } = useT();
-  const { lang } = useLang();
 
   useEffect(() => {
     const tId = setTimeout(() => setVisible(true), 10);
     return () => clearTimeout(tId);
   }, []);
 
-  const bio = getLocalized(config, 'bio', lang) || '';
+  const bio = useTextoTraduzido(config, 'bio');
 
   return (
     <div

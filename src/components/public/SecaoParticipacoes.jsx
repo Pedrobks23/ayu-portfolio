@@ -4,11 +4,12 @@ import { useT } from '@/i18n/useT';
 import { useLang } from '@/context/LanguageContext';
 import { getLocalized } from '@/i18n/getLocalized';
 import { separarParticipacoes } from '@/lib/participacoes';
+import { useTextoTraduzido } from '@/i18n/useTraducao';
 
 function ItemParticipacao({ p, primeiro, lang, apagado }) {
   const titulo = getLocalized(p, 'titulo', lang) || p.titulo;
   const local = getLocalized(p, 'local', lang) || p.local;
-  const data = getLocalized(p, 'data', lang) || p.data;
+  const data = useTextoTraduzido(p, 'data');
 
   return (
     <div

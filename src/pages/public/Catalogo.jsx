@@ -6,8 +6,7 @@ import ObraCard from '@/components/public/ObraCard';
 import FiltroCatalogo from '@/components/public/FiltroCatalogo';
 import Footer from '@/components/public/Footer';
 import { useT } from '@/i18n/useT';
-import { useLang } from '@/context/LanguageContext';
-import { getLocalized } from '@/i18n/getLocalized';
+import { useTextoTraduzido } from '@/i18n/useTraducao';
 import {
   chaveColecao,
   colecoesDoCatalogo,
@@ -24,7 +23,6 @@ export default function Catalogo() {
   const [anyHovered, setAnyHovered] = useState(false);
   const [visible, setVisible] = useState(false);
   const { t } = useT();
-  const { lang } = useLang();
 
   useEffect(() => {
     const tId = setTimeout(() => setVisible(true), 10);
@@ -62,8 +60,9 @@ export default function Catalogo() {
       ? obrasVisiveis.filter(o => obraPertence(o, selecionada.colecao))
       : semColecao;
 
+  const descricaoTraduzida = useTextoTraduzido(selecionada?.colecao, 'descricao');
   const descricao = selecionada?.colecao
-    ? getLocalized(selecionada.colecao, 'descricao', lang) || selecionada.colecao.descricao || ''
+    ? descricaoTraduzida
     : '';
 
   const carregando = loadingObras || loadingColecoes;
