@@ -6,6 +6,12 @@ export function getLocalized(obj, campo, lang) {
   return obj?.[campo] ?? '';
 }
 
+export function traduzirTipo(valor, t) {
+  if (valor === 'Escultura') return t('obra.tipo_Escultura');
+  if (valor === 'Pintura') return t('obra.tipo_Pintura');
+  return valor;
+}
+
 export function traduzirDisponibilidade(valor, t) {
   if (valor === 'Disponível') return t('obra.disp_Disponivel');
   if (valor === 'Sob consulta') return t('obra.disp_SobConsulta');

@@ -4,6 +4,11 @@ import imageCompression from 'browser-image-compression';
 import AdminLayout from '@/components/admin/AdminLayout';
 import { useConfiguracoes } from '@/hooks/useConfiguracoes';
 import { uploadImagem, urlOtimizada } from '@/lib/cloudinary';
+import TraducaoIngles from '@/components/admin/TraducaoIngles';
+import TraduzirPendentes from '@/components/admin/TraduzirPendentes';
+import { completarTraducoes } from '@/lib/traducao';
+
+const CAMPOS_TRADUZIVEIS = [{ campo: 'bio', label: 'Bio', multiline: true, rows: 6 }];
 
 function isHeic(file) {
   return (
@@ -22,6 +27,7 @@ export default function Configuracoes() {
   const [uploadandoHero, setUploadandoHero] = useState(false);
   const [sucesso, setSucesso] = useState(false);
   const heroRef = useRef(null);
+  const editadosEn = useRef(new Set()).current;
 
   useEffect(() => {
     if (config && !form) {
@@ -84,7 +90,14 @@ export default function Configuracoes() {
     setSalvando(true);
     setSucesso(false);
     try {
-      await salvarConfig(form);
+      const { valores: traducoes } = await completarTraducoes({
+        form, original: config, editadosEn,
+        campos: ['bio'],
+        email: form.contato?.email || config?.contato?.email,
+      });
+      const dados = { ...form, ...traducoes };
+      await salvarConfig(dados);
+      setForm(dados);
       setSucesso(true);
       setTimeout(() => setSucesso(false), 3000);
     } catch {
@@ -169,6 +182,13 @@ export default function Configuracoes() {
           }}
         >
           Configurações
+        </div>
+
+        <div style={{ marginBottom: '40px' }}>
+          <TraduzirPendentes
+            config={config}
+            onBioTraduzida={en => setField('bioEn', en)}
+          />
         </div>
 
         <form onSubmit={handleSalvar}>
@@ -265,26 +285,14 @@ export default function Configuracoes() {
                 placeholder="Texto sobre a artista..."
               />
 
-              {/* Bio EN */}
-              <details style={{ marginTop: '24px', border: '1px solid rgba(197,192,186,0.5)', background: 'rgba(197,192,186,0.06)' }}>
-                <summary style={{ padding: '12px 16px', fontFamily: 'var(--sans)', fontSize: '0.62rem', letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--mid)', cursor: 'pointer', userSelect: 'none' }}>
-                  Tradução para inglês (opcional)
-                </summary>
-                <div style={{ padding: '0 16px 20px' }}>
-                  <div style={{ fontFamily: 'var(--sans)', fontSize: '0.68rem', color: 'var(--mid)', lineHeight: 1.6, marginBottom: '16px', marginTop: '12px' }}>
-                    Deixe em branco pra usar o texto em português. Recomendado preencher pelo menos bio e descrições.
-                  </div>
-                  <label style={labelStyle} htmlFor="bioEn">Bio (EN)</label>
-                  <textarea
-                    id="bioEn"
-                    rows={6}
-                    value={form.bioEn}
-                    onChange={e => setField('bioEn', e.target.value)}
-                    style={{ ...inputStyle, resize: 'vertical' }}
-                    placeholder="Text about the artist..."
-                  />
-                </div>
-              </details>
+              <TraducaoIngles
+                campos={CAMPOS_TRADUZIVEIS}
+                form={form}
+                onChange={setField}
+                editadosEn={editadosEn}
+                email={form.contato?.email}
+                marginTop="24px"
+              />
             </section>
 
             {/* URL portfólio */}
@@ -362,7 +370,7 @@ export default function Configuracoes() {
                 opacity: salvando ? 0.5 : 1,
               }}
             >
-              {salvando ? 'Salvando...' : 'Salvar configurações'}
+              {salvando ? 'Salvando e traduzindo...' : 'Salvar configurações'}
             </button>
             {sucesso && (
               <span style={{ fontFamily: 'var(--sans)', fontSize: '0.7rem', color: '#3a6b3a', letterSpacing: '0.05em' }}>

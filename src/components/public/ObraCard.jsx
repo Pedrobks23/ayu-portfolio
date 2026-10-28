@@ -1,10 +1,13 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Imagem from '@/components/public/Imagem';
+import { useT } from '@/i18n/useT';
+import { traduzirTipo } from '@/i18n/getLocalized';
 
 export default function ObraCard({ obra, onHoverChange }) {
   const [hovered, setHovered] = useState(false);
   const navigate = useNavigate();
+  const { t } = useT();
   const capa = obra.imagens?.[0];
 
   function handleEnter() {
@@ -114,7 +117,7 @@ export default function ObraCard({ obra, onHoverChange }) {
             letterSpacing: '0.03em',
           }}
         >
-          {obra.tipo} · {obra.ano}
+          {traduzirTipo(obra.tipo, t)} · {obra.ano}
         </div>
       </div>
     </div>

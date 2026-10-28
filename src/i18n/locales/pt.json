@@ -41,7 +41,12 @@
     "email": "E-mail",
     "disp_Disponivel": "Disponível",
     "disp_SobConsulta": "Sob consulta",
-    "disp_Indisponivel": "Indisponível"
+    "disp_Indisponivel": "Indisponível",
+    "tipo_Escultura": "Escultura",
+    "tipo_Pintura": "Pintura",
+    "msgWhatsapp": "Olá! Gostaria de adquirir a obra \"{{titulo}}\". Poderia me passar mais informações?",
+    "msgEmailAssunto": "Interesse na obra \"{{titulo}}\"",
+    "msgEmailCorpo": "Olá Ayume,\n\nTenho interesse na obra \"{{titulo}}\" e gostaria de saber mais informações sobre disponibilidade e valores.\n\nObrigado(a)."
   },
   "sobre": {
     "kicker": "A artista",

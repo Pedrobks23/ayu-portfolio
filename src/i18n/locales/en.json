@@ -41,7 +41,12 @@
     "email": "E-mail",
     "disp_Disponivel": "Available",
     "disp_SobConsulta": "On request",
-    "disp_Indisponivel": "Unavailable"
+    "disp_Indisponivel": "Unavailable",
+    "tipo_Escultura": "Sculpture",
+    "tipo_Pintura": "Painting",
+    "msgWhatsapp": "Hello! I would like to acquire the work \"{{titulo}}\". Could you send me more information?",
+    "msgEmailAssunto": "Interest in the work \"{{titulo}}\"",
+    "msgEmailCorpo": "Hello Ayume,\n\nI am interested in the work \"{{titulo}}\" and would like to know more about its availability and price.\n\nThank you."
   },
   "sobre": {
     "kicker": "The artist",

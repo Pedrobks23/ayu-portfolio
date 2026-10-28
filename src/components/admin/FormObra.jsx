@@ -6,6 +6,14 @@ import { uploadImagem, urlOtimizada } from '@/lib/cloudinary';
 import { slugify } from '@/lib/utils';
 import CropModal from '@/components/admin/CropModal';
 import { useColecoes } from '@/hooks/useColecoes';
+import { useConfiguracoes } from '@/hooks/useConfiguracoes';
+import TraducaoIngles from '@/components/admin/TraducaoIngles';
+import { completarTraducoes } from '@/lib/traducao';
+
+const CAMPOS_TRADUZIVEIS = [
+  { campo: 'tecnica', label: 'Técnica' },
+  { campo: 'descricao', label: 'Descrição', multiline: true },
+];
 import { chaveColecao } from '@/lib/colecoes';
 
 const DISPONIBILIDADES = ['Disponível', 'Sob consulta', 'Indisponível'];
@@ -50,6 +58,8 @@ function makeId() {
 export default function FormObra({ obraExistente }) {
   const navigate = useNavigate();
   const { criarObra, atualizarObra, obras } = useObras();
+  const { config } = useConfiguracoes();
+  const editadosEn = useRef(new Set()).current;
   const fileRef = useRef(null);
 
   const [form, setForm] = useState(() => {
@@ -207,10 +217,17 @@ export default function FormObra({ obraExistente }) {
       .filter(i => i.publicId && !i.erro)
       .map((i, idx) => ({ publicId: i.publicId, url: i.url, bytes: i.bytes ?? 0, width: i.width ?? 0, height: i.height ?? 0, crop: i.crop ?? null, ordem: idx }));
 
-    const dadosObra = { ...form, slug, imagens: imagensSalvas };
-
     setSalvando(true);
     try {
+      const { valores: traducoes } = await completarTraducoes({
+        form,
+        original: obraExistente || {},
+        editadosEn,
+        campos: CAMPOS_TRADUZIVEIS.map(c => c.campo),
+        email: config?.contato?.email,
+      });
+      const dadosObra = { ...form, ...traducoes, slug, imagens: imagensSalvas };
+
       if (editando) {
         await atualizarObra(obraExistente.slug, dadosObra);
       } else {
@@ -435,81 +452,15 @@ export default function FormObra({ obraExistente }) {
         </div>
       </div>
 
-      {/* Bloco tradução EN */}
-      <details
-        style={{
-          marginTop: '40px',
-          border: '1px solid rgba(197,192,186,0.5)',
-          background: 'rgba(197,192,186,0.06)',
-        }}
-      >
-        <summary
-          style={{
-            padding: '16px 20px',
-            fontFamily: 'var(--sans)',
-            fontSize: '0.62rem',
-            letterSpacing: '0.18em',
-            textTransform: 'uppercase',
-            color: 'var(--mid)',
-            cursor: 'pointer',
-            userSelect: 'none',
-          }}
-        >
-          Tradução para inglês (opcional)
-        </summary>
-        <div style={{ padding: '0 20px 24px' }}>
-          <div
-            style={{
-              fontFamily: 'var(--sans)',
-              fontSize: '0.68rem',
-              color: 'var(--mid)',
-              lineHeight: 1.6,
-              marginBottom: '24px',
-              marginTop: '12px',
-            }}
-          >
-            Deixe em branco pra usar o texto em português. Recomendado preencher pelo menos bio e descrições.
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-            <div>
-              <label style={labelStyle} htmlFor="tituloEn">Título (EN)</label>
-              <input id="tituloEn" type="text"
-                value={form.tituloEn || ''}
-                onChange={e => set('tituloEn', e.target.value)}
-                style={inputStyle}
-                placeholder="when it corrodes"
-              />
-            </div>
-            <div>
-              <label style={labelStyle} htmlFor="tecnicaEn">Técnica (EN)</label>
-              <input id="tecnicaEn" type="text"
-                value={form.tecnicaEn || ''}
-                onChange={e => set('tecnicaEn', e.target.value)}
-                style={inputStyle}
-                placeholder="Glazed ceramics"
-              />
-            </div>
-            <div>
-              <label style={labelStyle} htmlFor="colecaoEn">Coleção (EN)</label>
-              <input id="colecaoEn" type="text"
-                value={form.colecaoEn || ''}
-                onChange={e => set('colecaoEn', e.target.value)}
-                style={inputStyle}
-                placeholder="8,092 days at home"
-              />
-            </div>
-            <div>
-              <label style={labelStyle} htmlFor="descricaoEn">Descrição (EN)</label>
-              <textarea id="descricaoEn" rows={4}
-                value={form.descricaoEn || ''}
-                onChange={e => set('descricaoEn', e.target.value)}
-                style={{ ...inputStyle, resize: 'vertical' }}
-                placeholder="Free text about the work..."
-              />
-            </div>
-          </div>
-        </div>
-      </details>
+      {/* Versão em inglês (tradução automática) */}
+      <TraducaoIngles
+        campos={CAMPOS_TRADUZIVEIS}
+        form={form}
+        onChange={set}
+        editadosEn={editadosEn}
+        email={config?.contato?.email}
+        marginTop="40px"
+      />
 
       {/* Bloco de imagens */}
       <div style={{ marginTop: '40px' }}>
@@ -751,7 +702,7 @@ export default function FormObra({ obraExistente }) {
             opacity: salvando || uploadandoAlguma ? 0.5 : 1,
           }}
         >
-          {salvando ? 'Salvando...' : editando ? 'Salvar alterações' : 'Criar obra'}
+          {salvando ? 'Salvando e traduzindo...' : editando ? 'Salvar alterações' : 'Criar obra'}
         </button>
         <button
           type="button"

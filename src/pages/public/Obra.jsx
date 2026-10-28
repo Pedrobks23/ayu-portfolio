@@ -8,7 +8,7 @@ import Footer from '@/components/public/Footer';
 import { BtnBlack } from '@/components/public/ui';
 import { useT } from '@/i18n/useT';
 import { useLang } from '@/context/LanguageContext';
-import { getLocalized, traduzirDisponibilidade } from '@/i18n/getLocalized';
+import { getLocalized, traduzirDisponibilidade, traduzirTipo } from '@/i18n/getLocalized';
 
 // Fisher–Yates: embaralha uma cópia sem alterar o array original
 function embaralhar(lista) {
@@ -27,14 +27,13 @@ function dispColor(disponibilidade) {
 }
 
 function ModalContato({ obra, contato, onClose, t }) {
-  const titulo = encodeURIComponent(obra.titulo);
   const whatsappUrl = `https://wa.me/${contato.whatsapp}?text=${encodeURIComponent(
-    `Olá! Gostaria de adquirir a obra "${obra.titulo}". Poderia me passar mais informações?`
+    t('obra.msgWhatsapp', { titulo: obra.titulo })
   )}`;
   const emailUrl = `mailto:${contato.email}?subject=${encodeURIComponent(
-    `Interesse na obra "${obra.titulo}"`
+    t('obra.msgEmailAssunto', { titulo: obra.titulo })
   )}&body=${encodeURIComponent(
-    `Olá Ayume,\n\nTenho interesse na obra "${obra.titulo}" e gostaria de saber mais informações sobre disponibilidade e valores.\n\nObrigado(a).`
+    t('obra.msgEmailCorpo', { titulo: obra.titulo })
   )}`;
 
   return (
@@ -191,9 +190,10 @@ export default function Obra() {
   const imagens = obra.imagens || [];
   const contato = config?.contato || {};
 
-  const titulo = getLocalized(obra, 'titulo', lang) || obra.titulo;
+  // Nomes de obra e de coleção ficam sempre no original, em qualquer idioma
+  const titulo = obra.titulo;
   const tecnica = getLocalized(obra, 'tecnica', lang) || obra.tecnica;
-  const colecaoVal = getLocalized(obra, 'colecao', lang) || obra.colecao;
+  const colecaoVal = obra.colecao;
   const descricao = getLocalized(obra, 'descricao', lang) || obra.descricao;
 
   const metaRows = [
@@ -338,7 +338,7 @@ export default function Obra() {
               marginBottom: '14px',
             }}
           >
-            {obra.tipo}
+            {traduzirTipo(obra.tipo, t)}
           </div>
           <h1
             style={{

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import {
   collection, addDoc, doc, getDoc, writeBatch, serverTimestamp,
@@ -8,6 +8,11 @@ import AdminLayout from '@/components/admin/AdminLayout';
 import { useObras } from '@/context/ObrasContext';
 import { useColecoes } from '@/hooks/useColecoes';
 import { chaveColecao } from '@/lib/colecoes';
+import { useConfiguracoes } from '@/hooks/useConfiguracoes';
+import TraducaoIngles from '@/components/admin/TraducaoIngles';
+import { completarTraducoes } from '@/lib/traducao';
+
+const CAMPOS_TRADUZIVEIS = [{ campo: 'descricao', label: 'Descrição', multiline: true, rows: 7 }];
 
 const estadoVazio = {
   nome: '',
@@ -25,6 +30,9 @@ export default function ColecaoForm() {
   const editando = Boolean(id);
   const { obras } = useObras();
   const { colecoes } = useColecoes();
+  const { config } = useConfiguracoes();
+  const editadosEn = useRef(new Set()).current;
+  const [original, setOriginal] = useState({});
 
   const [form, setForm] = useState(() => ({
     ...estadoVazio,
@@ -49,6 +57,7 @@ export default function ColecaoForm() {
           descricaoEn: d.descricaoEn || '',
         });
         setNomeOriginal(d.nome || '');
+        setOriginal(d);
       }
       setCarregando(false);
     });
@@ -78,13 +87,18 @@ export default function ColecaoForm() {
 
     setSalvando(true);
     try {
+      const { valores: traducoes } = await completarTraducoes({
+        form, original, editadosEn,
+        campos: ['descricao'],
+        email: config?.contato?.email,
+      });
       const dados = {
         nome,
         descricao: form.descricao.trim(),
         ordem: Number(form.ordem) || 0,
         visivel: form.visivel,
         nomeEn: form.nomeEn.trim(),
-        descricaoEn: form.descricaoEn.trim(),
+        descricaoEn: (traducoes.descricaoEn ?? form.descricaoEn).trim(),
         atualizadoEm: serverTimestamp(),
       };
 
@@ -227,31 +241,13 @@ export default function ColecaoForm() {
             </div>
           </div>
 
-          {/* Tradução EN */}
-          <details style={{ marginTop: '32px', border: '1px solid rgba(197,192,186,0.5)', background: 'rgba(197,192,186,0.06)' }}>
-            <summary style={{ padding: '14px 18px', fontFamily: 'var(--sans)', fontSize: '0.62rem', letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--mid)', cursor: 'pointer', userSelect: 'none' }}>
-              Tradução para inglês (opcional)
-            </summary>
-            <div style={{ padding: '0 18px 22px' }}>
-              <div style={{ fontFamily: 'var(--sans)', fontSize: '0.68rem', color: 'var(--mid)', lineHeight: 1.6, marginBottom: '20px', marginTop: '12px' }}>
-                Deixe em branco pra usar o texto em português.
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                <div>
-                  <label style={labelStyle} htmlFor="nomeEn">Nome (EN)</label>
-                  <input id="nomeEn" type="text" value={form.nomeEn}
-                    onChange={e => set('nomeEn', e.target.value)}
-                    style={inputStyle} placeholder="8,092 days" />
-                </div>
-                <div>
-                  <label style={labelStyle} htmlFor="descricaoEn">Descrição (EN)</label>
-                  <textarea id="descricaoEn" rows={6} value={form.descricaoEn}
-                    onChange={e => set('descricaoEn', e.target.value)}
-                    style={{ ...inputStyle, resize: 'vertical', lineHeight: 1.6 }} />
-                </div>
-              </div>
-            </div>
-          </details>
+          <TraducaoIngles
+            campos={CAMPOS_TRADUZIVEIS}
+            form={form}
+            onChange={set}
+            editadosEn={editadosEn}
+            email={config?.contato?.email}
+          />
 
           {erro && (
             <div role="alert" style={{ marginTop: '24px', padding: '14px 20px', background: 'rgba(138,48,48,0.08)', borderLeft: '3px solid #8a3030', fontFamily: 'var(--sans)', fontSize: '0.75rem', color: '#8a3030' }}>
@@ -265,7 +261,7 @@ export default function ColecaoForm() {
               disabled={salvando}
               style={{ fontFamily: 'var(--sans)', fontSize: '0.62rem', letterSpacing: '0.22em', textTransform: 'uppercase', background: 'var(--text)', color: 'var(--bg)', border: 'none', padding: '16px 36px', cursor: salvando ? 'not-allowed' : 'pointer', opacity: salvando ? 0.5 : 1 }}
             >
-              {salvando ? 'Salvando...' : editando ? 'Salvar alterações' : 'Criar coleção'}
+              {salvando ? 'Salvando e traduzindo...' : editando ? 'Salvar alterações' : 'Criar coleção'}
             </button>
             <button
               type="button"

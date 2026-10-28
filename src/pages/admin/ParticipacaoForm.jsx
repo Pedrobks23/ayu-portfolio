@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
   collection, addDoc, doc, getDoc, updateDoc, serverTimestamp, Timestamp, deleteField
@@ -6,6 +6,16 @@ import {
 import { db } from '@/lib/firebase';
 import AdminLayout from '@/components/admin/AdminLayout';
 import { isPassada } from '@/lib/participacoes';
+import { useConfiguracoes } from '@/hooks/useConfiguracoes';
+import TraducaoIngles from '@/components/admin/TraducaoIngles';
+import { completarTraducoes } from '@/lib/traducao';
+
+// Título e local costumam ser nomes próprios (exposição, galeria): ficam manuais.
+const CAMPOS_TRADUZIVEIS = [
+  { campo: 'data', label: 'Data (texto)' },
+  { campo: 'titulo', label: 'Título', auto: false },
+  { campo: 'local', label: 'Local', auto: false },
+];
 
 const estadoVazio = {
   titulo: '',
@@ -50,12 +60,16 @@ export default function ParticipacaoForm() {
   const [carregando, setCarregando] = useState(editando);
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState('');
+  const [original, setOriginal] = useState({});
+  const { config } = useConfiguracoes();
+  const editadosEn = useRef(new Set()).current;
 
   useEffect(() => {
     if (!editando) return;
     getDoc(doc(db, 'participacoes', id)).then(snap => {
       if (snap.exists()) {
         const d = snap.data();
+        setOriginal(d);
         setForm({
           titulo: d.titulo || '',
           local: d.local || '',
@@ -87,6 +101,11 @@ export default function ParticipacaoForm() {
     }
     setSalvando(true);
     try {
+      const { valores: traducoes } = await completarTraducoes({
+        form, original, editadosEn,
+        campos: CAMPOS_TRADUZIVEIS.filter(c => c.auto !== false).map(c => c.campo),
+        email: config?.contato?.email,
+      });
       const dados = {
         titulo: form.titulo.trim(),
         local: form.local.trim(),
@@ -97,7 +116,7 @@ export default function ParticipacaoForm() {
         ordem: Number(form.ordem) || 0,
         tituloEn: form.tituloEn.trim(),
         localEn: form.localEn.trim(),
-        dataEn: form.dataEn.trim(),
+        dataEn: (traducoes.dataEn ?? form.dataEn).trim(),
         atualizadoEm: serverTimestamp(),
       };
       const passada =
@@ -258,37 +277,13 @@ export default function ParticipacaoForm() {
             </div>
           </div>
 
-          {/* Tradução EN */}
-          <details style={{ marginTop: '32px', border: '1px solid rgba(197,192,186,0.5)', background: 'rgba(197,192,186,0.06)' }}>
-            <summary style={{ padding: '14px 18px', fontFamily: 'var(--sans)', fontSize: '0.62rem', letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--mid)', cursor: 'pointer', userSelect: 'none' }}>
-              Tradução para inglês (opcional)
-            </summary>
-            <div style={{ padding: '0 18px 22px' }}>
-              <div style={{ fontFamily: 'var(--sans)', fontSize: '0.68rem', color: 'var(--mid)', lineHeight: 1.6, marginBottom: '20px', marginTop: '12px' }}>
-                Deixe em branco pra usar o texto em português. Recomendado preencher pelo menos bio e descrições.
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                <div>
-                  <label style={labelStyle} htmlFor="tituloEn">Título (EN)</label>
-                  <input id="tituloEn" type="text" value={form.tituloEn}
-                    onChange={e => set('tituloEn', e.target.value)}
-                    style={inputStyle} placeholder="FARGO" />
-                </div>
-                <div>
-                  <label style={labelStyle} htmlFor="localEn">Local (EN)</label>
-                  <input id="localEn" type="text" value={form.localEn}
-                    onChange={e => set('localEn', e.target.value)}
-                    style={inputStyle} placeholder="Oscar Niemeyer Cultural Center — GO" />
-                </div>
-                <div>
-                  <label style={labelStyle} htmlFor="dataEn">Data (EN)</label>
-                  <input id="dataEn" type="text" value={form.dataEn}
-                    onChange={e => set('dataEn', e.target.value)}
-                    style={inputStyle} placeholder="May 16–17" />
-                </div>
-              </div>
-            </div>
-          </details>
+          <TraducaoIngles
+            campos={CAMPOS_TRADUZIVEIS}
+            form={form}
+            onChange={set}
+            editadosEn={editadosEn}
+            email={config?.contato?.email}
+          />
 
           {erro && (
             <div role="alert" style={{ marginTop: '24px', padding: '14px 20px', background: 'rgba(138,48,48,0.08)', borderLeft: '3px solid #8a3030', fontFamily: 'var(--sans)', fontSize: '0.75rem', color: '#8a3030' }}>
@@ -302,7 +297,7 @@ export default function ParticipacaoForm() {
               disabled={salvando}
               style={{ fontFamily: 'var(--sans)', fontSize: '0.62rem', letterSpacing: '0.22em', textTransform: 'uppercase', background: 'var(--text)', color: 'var(--bg)', border: 'none', padding: '16px 36px', cursor: salvando ? 'not-allowed' : 'pointer', opacity: salvando ? 0.5 : 1 }}
             >
-              {salvando ? 'Salvando...' : editando ? 'Salvar alterações' : 'Criar participação'}
+              {salvando ? 'Salvando e traduzindo...' : editando ? 'Salvar alterações' : 'Criar participação'}
             </button>
             <button
               type="button"

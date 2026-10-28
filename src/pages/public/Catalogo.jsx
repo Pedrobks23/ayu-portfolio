@@ -41,7 +41,7 @@ export default function Catalogo() {
   const opcoes = [
     ...exibidas.map(c => ({
       chave: chaveColecao(c.nome),
-      label: getLocalized(c, 'nome', lang) || c.nome,
+      label: c.nome, // nome da coleção não é traduzido
       colecao: c,
     })),
     ...(semColecao.length > 0
